@@ -1,250 +1,518 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import Swal from 'sweetalert2'; // ✅ ADDED
+import React, { useState, useEffect, useMemo } from 'react';
+import Swal from 'sweetalert2';
+import { taskApi, teamApi } from '../api/client';
 import Modal from '../components/Modal';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import dayjs from 'dayjs';
+import { 
+  PlusIcon, 
+  SearchIcon, 
+  FilterIcon, 
+  TrashIcon, 
+  EditIcon, 
+  ClockIcon, 
+  AlertCircleIcon, 
+  CheckCircleIcon,
+  UserIcon
+} from '../components/Icons';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
-  const [newTask, setNewTask] = useState({
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('All');
+  const [selectedAssignee, setSelectedAssignee] = useState('All');
+
+  const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
     assignee: '',
     deadline: dayjs(),
-    type: ''
+    type: 'Review'
   });
 
   useEffect(() => {
-    fetchTasks();
+    fetchData();
   }, []);
 
-  const fetchTasks = () => {
-    axios.get('http://localhost:5000/api/tasks')
-      .then(res => {
-        const sorted = res.data.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-        setTasks(sorted);
-      })
-      .catch(err => console.error('Error fetching tasks:', err));
-  };
-
-  const handleSaveTask = async () => {
-    const { title, assignee, deadline, type } = newTask;
-
-    if (!title.trim()) {
-      return Swal.fire('⚠️ Missing Title', 'Please enter a task title.', 'warning');
-    }
-
-    if (!assignee.trim()) {
-      return Swal.fire('⚠️ Missing Assignee', 'Please enter who is responsible.', 'warning');
-    }
-
-    if (!type.trim()) {
-      return Swal.fire('⚠️ Missing Task Type', 'Please select a task type.', 'warning');
-    }
-
-    if (dayjs(deadline).isBefore(dayjs())) {
-      return Swal.fire('⚠️ Invalid Deadline', 'Deadline must be in the future.', 'warning');
-    }
-
+  const fetchData = async () => {
     try {
-      if (isEditing) {
-        await axios.put(`http://localhost:5000/api/tasks/${editTaskId}`, {
-          ...newTask,
-          deadline: newTask.deadline.toISOString()
-        });
-        Swal.fire('✅ Task Updated', 'The task was updated successfully.', 'success');
-      } else {
-        await axios.post('http://localhost:5000/api/tasks', {
-          ...newTask,
-          deadline: newTask.deadline.toISOString()
-        });
-        Swal.fire('✅ Task Created', 'The task was added successfully.', 'success');
-      }
-
-      fetchTasks();
-      setIsModalOpen(false);
-      setIsEditing(false);
-      setEditTaskId(null);
-      setNewTask({ title: '', description: '', assignee: '', deadline: dayjs(), type: '' });
-
+      setLoading(true);
+      const [taskRes, memberRes] = await Promise.all([
+        taskApi.getAll(),
+        teamApi.getAll()
+      ]);
+      const sorted = (taskRes.data || []).sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      setTasks(sorted);
+      setTeamMembers(memberRes.data || []);
     } catch (err) {
-      console.error('Error saving task:', err);
-      Swal.fire('❌ Error', 'Something went wrong while saving the task.', 'error');
+      console.error('Error fetching tasks data:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditTask = (task) => {
-    setIsEditing(true);
-    setEditTaskId(task._id);
-    setNewTask({
-      title: task.title,
-      description: task.description,
-      assignee: task.assignee,
-      deadline: dayjs(task.deadline),
-      type: task.type
+  const handleOpenAdd = () => {
+    setIsEditing(false);
+    setEditTaskId(null);
+    setTaskForm({
+      title: '',
+      description: '',
+      assignee: teamMembers.length > 0 ? teamMembers[0].name : '',
+      deadline: dayjs().add(1, 'day'),
+      type: 'Review'
     });
     setIsModalOpen(true);
   };
 
-  const handleDeleteTask = async (id) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "This task will be permanently deleted!",
+  const handleOpenEdit = (task) => {
+    setIsEditing(true);
+    setEditTaskId(task._id);
+    setTaskForm({
+      title: task.title || '',
+      description: task.description || '',
+      assignee: task.assignee || '',
+      deadline: dayjs(task.deadline),
+      type: task.type || 'Review'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e) => {
+    e?.preventDefault();
+    const { title, assignee, deadline, type } = taskForm;
+
+    if (!title.trim()) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Title Required',
+        text: 'Please enter a task title.',
+        confirmButtonColor: '#4f46e5'
+      });
+    }
+
+    if (!assignee.trim()) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Assignee Required',
+        text: 'Please select or enter an assignee.',
+        confirmButtonColor: '#4f46e5'
+      });
+    }
+
+    if (dayjs(deadline).isBefore(dayjs())) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Deadline',
+        text: 'Deadline must be set in the future.',
+        confirmButtonColor: '#4f46e5'
+      });
+    }
+
+    try {
+      const payload = {
+        ...taskForm,
+        deadline: taskForm.deadline.toISOString()
+      };
+
+      if (isEditing) {
+        await taskApi.update(editTaskId, payload);
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Task deliverables updated successfully.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        await taskApi.create(payload);
+        Swal.fire({
+          icon: 'success',
+          title: 'Created!',
+          text: 'New task added to board.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+
+      setIsModalOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error('Error saving task:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Could not save the task. Check server logs.'
+      });
+    }
+  };
+
+  const handleDelete = async (id, title) => {
+    const res = await Swal.fire({
+      title: `Delete task?`,
+      text: `Are you sure you want to permanently delete "${title}"?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, delete'
     });
 
-    if (result.isConfirmed) {
+    if (res.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:5000/api/tasks/${id}`);
-        fetchTasks();
-        Swal.fire('🗑️ Deleted!', 'The task has been deleted.', 'success');
+        await taskApi.delete(id);
+        fetchData();
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: 'Task removed successfully.',
+          timer: 1500,
+          showConfirmButton: false
+        });
       } catch (err) {
-        console.error('Error deleting task:', err);
-        Swal.fire('❌ Error', 'Could not delete the task.', 'error');
+        console.error('Delete error:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete task.' });
       }
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'No deadline';
-    return new Date(dateStr).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: '2-digit',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+  // Filter tasks based on search and filters
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const matchSearch =
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.assignee && t.assignee.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchType = selectedType === 'All' || t.type === selectedType;
+      const matchAssignee = selectedAssignee === 'All' || t.assignee === selectedAssignee;
+
+      return matchSearch && matchType && matchAssignee;
     });
-  };
+  }, [tasks, searchQuery, selectedType, selectedAssignee]);
 
-  const getTypeClass = (type) => {
-    const base = "inline-flex justify-center items-center text-center w-28 px-5 py-3 rounded-full text-sm font-semibold";
-
+  const getTypeStyle = (type) => {
     switch (type) {
       case 'Meeting':
-        return `${base} bg-blue-100 text-blue-700`;
+        return {
+          pill: 'bg-blue-50 text-blue-700 border-blue-200/80',
+          border: 'border-l-blue-500'
+        };
       case 'Deadline':
-        return `${base} bg-red-100 text-red-600`;
+        return {
+          pill: 'bg-rose-50 text-rose-700 border-rose-200/80',
+          border: 'border-l-rose-500'
+        };
       case 'Review':
-        return `${base} bg-green-100 text-green-700`;
+        return {
+          pill: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+          border: 'border-l-emerald-500'
+        };
       default:
-        return `${base} bg-gray-100 text-gray-700`;
+        return {
+          pill: 'bg-slate-100 text-slate-700 border-slate-200',
+          border: 'border-l-slate-400'
+        };
     }
   };
 
+  const getRelativeInfo = (deadlineStr) => {
+    if (!deadlineStr) return { text: 'No deadline', color: 'text-slate-400' };
+    const now = new Date();
+    const deadline = new Date(deadlineStr);
+    const diffHours = (deadline - now) / (1000 * 60 * 60);
+
+    if (diffHours < 0) {
+      const days = Math.abs(Math.round(diffHours / 24));
+      return { text: `Overdue by ${days === 0 ? 'hours' : days + 'd'}`, color: 'text-rose-600 font-semibold' };
+    }
+    if (diffHours <= 24) {
+      return { text: 'Due today', color: 'text-amber-600 font-semibold' };
+    }
+    const days = Math.round(diffHours / 24);
+    return { text: `Due in ${days} days`, color: 'text-slate-500' };
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">📋 Task Manager</h1>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Top Bar with Title and Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Task Deliverables</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Showing {filteredTasks.length} of {tasks.length} total tasks
+          </p>
+        </div>
+
         <button
-          className="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg shadow hover:bg-blue-700"
-          onClick={() => {
-            setIsModalOpen(true);
-            setIsEditing(false);
-            setNewTask({ title: '', description: '', assignee: '', deadline: dayjs(), type: '' });
-          }}
+          onClick={handleOpenAdd}
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition"
         >
-          + Add Task
+          <PlusIcon className="w-4 h-4" />
+          <span>Add New Task</span>
         </button>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-2">
-        {tasks.map(task => (
-          <div key={task._id} className="bg-white rounded-xl border border-gray-200 shadow-md p-5 flex flex-col justify-between transition hover:shadow-lg">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-gray-800">{task.title}</h2>
-              <p className="text-gray-600 text-sm">{task.description}</p>
-              <p className="text-gray-500 text-sm">👤 Assigned to: <span className="font-medium">{task.assignee}</span></p>
-              <p className="text-gray-500 text-sm">⏰ Deadline: {formatDate(task.deadline)}</p>
-              <span className={`inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full ${getTypeClass(task.type)}`}>{task.type}</span>
-            </div>
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => handleEditTask(task)}
-                className="text-blue-600 text-sm font-semibold hover:text-blue-800"
-              >
-                ✏️ Edit
-              </button>
-              <button
-                onClick={() => handleDeleteTask(task._id)}
-                className="text-red-600 text-sm font-semibold hover:text-red-800"
-              >
-                🗑️ Delete
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Search and Filters Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search by title, description, or assignee..."
+            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Type:</span>
+          {['All', 'Meeting', 'Deadline', 'Review'].map((type) => (
+            <button
+              key={type}
+              onClick={() => setSelectedType(type)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+                selectedType === type
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setIsEditing(false); }}>
-        <h2 className="text-xl font-bold mb-4 text-center">{isEditing ? 'Edit Task' : 'Add New Task'}</h2>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Title"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400"
-            value={newTask.title}
-            onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-          />
-          <textarea
-            placeholder="Description"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400"
-            value={newTask.description}
-            onChange={e => setNewTask({ ...newTask, description: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Assignee"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400"
-            value={newTask.assignee}
-            onChange={e => setNewTask({ ...newTask, assignee: e.target.value })}
-          />
-
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <StaticDateTimePicker
-              orientation="landscape"
-              value={newTask.deadline}
-              onChange={(value) => setNewTask({ ...newTask, deadline: value })}
-              minDateTime={dayjs()} // ✅ Prevent past dates
-            />
-          </LocalizationProvider>
-
-          <select
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400"
-            value={newTask.type}
-            onChange={e => setNewTask({ ...newTask, type: e.target.value })}
+      {/* Task Cards Grid */}
+      {loading ? (
+        <div className="py-20 text-center text-slate-400 text-sm">
+          Loading tasks from database...
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-3xl border border-dashed border-slate-300 p-8">
+          <CheckCircleIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-slate-700">No matching tasks found</h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+            {searchQuery || selectedType !== 'All' 
+              ? 'Try adjusting your search criteria or filter options.'
+              : 'Get started by creating your first task for the sprint.'}
+          </p>
+          <button
+            onClick={handleOpenAdd}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition"
           >
-            <option value="">Select Type</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Deadline">Deadline</option>
-            <option value="Review">Review</option>
-          </select>
+            <PlusIcon className="w-3.5 h-3.5" />
+            <span>Create Task</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredTasks.map((task) => {
+            const style = getTypeStyle(task.type);
+            const relative = getRelativeInfo(task.deadline);
+            return (
+              <div
+                key={task._id}
+                className={`bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden border-l-4 ${style.border}`}
+              >
+                <div className="p-5 space-y-3">
+                  {/* Top line: Type pill + relative due */}
+                  <div className="flex items-center justify-between">
+                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold border ${style.pill}`}>
+                      {task.type}
+                    </span>
+                    <span className={`text-xs ${relative.color}`}>{relative.text}</span>
+                  </div>
 
-          <div className="flex justify-end gap-3">
+                  {/* Title & Description */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight leading-snug">
+                      {task.title}
+                    </h3>
+                    {task.description && (
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        {task.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Deadline row */}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                    <ClockIcon className="w-3.5 h-3.5 text-slate-400" />
+                    <span>
+                      {new Date(task.deadline).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Footer: Assignee + Edit/Delete */}
+                <div className="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center border border-indigo-200">
+                      {task.assignee ? task.assignee.slice(0, 2).toUpperCase() : 'NA'}
+                    </div>
+                    <span className="text-xs font-medium text-slate-700 truncate max-w-[110px]">
+                      {task.assignee || 'Unassigned'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEdit(task)}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                      title="Edit task"
+                    >
+                      <EditIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(task._id, task.title)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                      title="Delete task"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Task Create / Edit Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={isEditing ? 'Edit Task Deliverable' : 'Add New Task'}
+        maxWidth="max-w-2xl"
+      >
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Task Title *
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Implement Stripe payment webhook"
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+              value={taskForm.title}
+              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Description
+            </label>
+            <textarea
+              placeholder="Add details, acceptance criteria, or external links..."
+              rows={3}
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-none"
+              value={taskForm.description}
+              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Assignee Selection */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Assignee *
+              </label>
+              {teamMembers.length > 0 ? (
+                <select
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                  value={taskForm.assignee}
+                  onChange={(e) => setTaskForm({ ...taskForm, assignee: e.target.value })}
+                >
+                  <option value="">Select a team member</option>
+                  {teamMembers.map((m) => (
+                    <option key={m._id} value={m.name}>
+                      {m.name} ({m.email})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Enter assignee name"
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                  value={taskForm.assignee}
+                  onChange={(e) => setTaskForm({ ...taskForm, assignee: e.target.value })}
+                  required
+                />
+              )}
+            </div>
+
+            {/* Task Type */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Type *
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                value={taskForm.type}
+                onChange={(e) => setTaskForm({ ...taskForm, type: e.target.value })}
+              >
+                <option value="Review">Review</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Deadline">Deadline</option>
+              </select>
+            </div>
+          </div>
+
+          {/* DateTime Picker */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Deadline Date & Time *
+            </label>
+            <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex justify-center">
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <StaticDateTimePicker
+                  orientation="landscape"
+                  value={taskForm.deadline}
+                  onChange={(newVal) => setTaskForm({ ...taskForm, deadline: newVal })}
+                  minDateTime={dayjs()}
+                />
+              </LocalizationProvider>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
             <button
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-              onClick={() => { setIsModalOpen(false); setIsEditing(false); }}
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
             >
               Cancel
             </button>
             <button
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              onClick={handleSaveTask}
+              type="submit"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition"
             >
-              {isEditing ? 'Update Task' : 'Save Task'}
+              {isEditing ? 'Save Changes' : 'Create Task'}
             </button>
           </div>
-        </div>
+        </form>
       </Modal>
     </div>
   );
