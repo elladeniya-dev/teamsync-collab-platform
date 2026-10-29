@@ -17,8 +17,8 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0">
-      <div>
+    <aside className="w-64 h-full bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0">
+      <div className="overflow-y-auto">
         {/* Brand Logo */}
         <div className="p-6 border-b border-slate-800/80 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">

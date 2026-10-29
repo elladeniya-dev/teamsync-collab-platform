@@ -120,14 +120,14 @@ const Calendar = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-full flex flex-col space-y-3 max-w-7xl mx-auto w-full">
       {/* Calendar Header with Navigation Controls */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="shrink-0 bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <span>{monthName}</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">Interactive delivery and milestone schedule</p>
+          <p className="text-xs text-slate-500">Interactive delivery and milestone schedule</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -156,28 +156,28 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Main Calendar Grid */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      {/* Main Calendar Grid - fills remaining vertical viewport perfectly */}
+      <div className="flex-1 min-h-[420px] bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
         {/* Days of the week header */}
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/70 text-center">
+        <div className="shrink-0 grid grid-cols-7 border-b border-slate-200 bg-slate-50/70 text-center py-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-            <div key={d} className="py-2.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <div key={d} className="text-xs font-bold uppercase tracking-wider text-slate-500">
               {d}
             </div>
           ))}
         </div>
 
-        {/* Days Grid */}
-        <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
+        {/* Days Grid - dynamic rows so all rows fit screen height */}
+        <div className={`flex-1 grid grid-cols-7 divide-x divide-y divide-slate-100 ${daysArray.length === 35 ? 'grid-rows-5' : 'grid-rows-6'}`}>
           {daysArray.map((cell, idx) => (
             <div
               key={idx}
-              className={`min-h-[110px] p-2 transition ${
+              className={`p-1.5 sm:p-2 flex flex-col justify-start min-h-0 overflow-hidden transition ${
                 cell.currentMonth ? 'bg-white' : 'bg-slate-50/40 text-slate-300'
               } ${cell.isToday ? 'bg-indigo-50/30' : ''}`}
             >
               {/* Day Number */}
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="shrink-0 flex items-center justify-between mb-1">
                 <span
                   className={`text-xs font-semibold inline-flex items-center justify-center w-6 h-6 rounded-full ${
                     cell.isToday
@@ -198,12 +198,12 @@ const Calendar = () => {
               </div>
 
               {/* Task Chips inside Date Cell */}
-              <div className="space-y-1 overflow-y-auto max-h-[80px]">
+              <div className="flex-1 overflow-y-auto space-y-1 pr-0.5">
                 {cell.tasks?.map((task) => (
                   <button
                     key={task._id}
                     onClick={() => setSelectedTask(task)}
-                    className={`w-full text-left truncate px-2 py-1 rounded text-[11px] font-semibold border transition block ${getTaskChipStyle(
+                    className={`w-full text-left truncate px-2 py-0.5 rounded text-[11px] font-semibold border transition block ${getTaskChipStyle(
                       task.type
                     )}`}
                     title={`${task.title} (${task.assignee || 'Unassigned'})`}
