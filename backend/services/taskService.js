@@ -1,4 +1,5 @@
 import Task from '../models/Task.js';
+import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const getAllTasks = async () => {
@@ -14,7 +15,22 @@ export const getTaskById = async (id) => {
 };
 
 export const createTask = async (taskData) => {
-  return await Task.create(taskData);
+  const task = await Task.create(taskData);
+
+  try {
+    await Notification.create({
+      title: 'New Task Created',
+      message: `"${task.title}" assigned to ${task.assignee || 'team'}.`,
+      type: 'task',
+      priority: task.type === 'Deadline' ? 'high' : 'medium',
+      link: '/tasks',
+      metadata: { taskId: task._id.toString() },
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for new task:', notifErr.message);
+  }
+
+  return task;
 };
 
 export const updateTask = async (id, updateData) => {
@@ -25,6 +41,20 @@ export const updateTask = async (id, updateData) => {
   if (!task) {
     throw new ApiError(404, `Task not found with id: ${id}`);
   }
+
+  try {
+    await Notification.create({
+      title: 'Task Deliverable Updated',
+      message: `"${task.title}" details were modified.`,
+      type: 'task',
+      priority: 'low',
+      link: '/tasks',
+      metadata: { taskId: task._id.toString() },
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for updated task:', notifErr.message);
+  }
+
   return task;
 };
 
@@ -33,5 +63,18 @@ export const deleteTask = async (id) => {
   if (!task) {
     throw new ApiError(404, `Task not found with id: ${id}`);
   }
+
+  try {
+    await Notification.create({
+      title: 'Task Deliverable Removed',
+      message: `"${task.title}" was removed from the sprint board.`,
+      type: 'task',
+      priority: 'medium',
+      link: '/tasks',
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for deleted task:', notifErr.message);
+  }
+
   return task;
 };

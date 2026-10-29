@@ -1,4 +1,5 @@
 import TeamMember from '../models/TeamMember.js';
+import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const getAllMembers = async () => {
@@ -14,7 +15,22 @@ export const getMemberById = async (id) => {
 };
 
 export const createMember = async (memberData) => {
-  return await TeamMember.create(memberData);
+  const member = await TeamMember.create(memberData);
+
+  try {
+    await Notification.create({
+      title: 'New Team Collaborator',
+      message: `${member.name} (${member.role || 'Member'}) joined the workspace.`,
+      type: 'team',
+      priority: 'low',
+      link: '/team',
+      metadata: { memberId: member._id.toString() },
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for team member:', notifErr.message);
+  }
+
+  return member;
 };
 
 export const deleteMember = async (id) => {
@@ -22,5 +38,18 @@ export const deleteMember = async (id) => {
   if (!member) {
     throw new ApiError(404, `Team member not found with id: ${id}`);
   }
+
+  try {
+    await Notification.create({
+      title: 'Team Directory Updated',
+      message: `${member.name} was removed from the team directory.`,
+      type: 'team',
+      priority: 'low',
+      link: '/team',
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for removed member:', notifErr.message);
+  }
+
   return member;
 };

@@ -60,4 +60,14 @@ export const teamApi = {
   delete: (id) => apiClient.delete(`/api/team/${id}`),
 };
 
+// Notifications API
+export const notificationApi = {
+  getAll: () => apiClient.get('/api/notifications'),
+  create: (data) => apiClient.post('/api/notifications', data),
+  markAsRead: (id) => apiClient.patch(`/api/notifications/${id}/read`),
+  markAllAsRead: () => apiClient.patch('/api/notifications/read-all'),
+  delete: (id) => apiClient.delete(`/api/notifications/${id}`),
+  clearAll: () => apiClient.delete('/api/notifications'),
+};
+
 export default apiClient;

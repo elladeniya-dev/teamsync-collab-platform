@@ -120,6 +120,25 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ---
 
+### Feature 2.4: Workspace Notification Center
+- **Status:** ✅ Completed
+- **Goal:** Full-featured notification center with unread badges, automated event triggers, deadline alerts, and one-click actions.
+- **Backend Tasks:**
+  - [x] Create `Notification` model with priority, type, read status, and links.
+  - [x] Auto-trigger notifications on task creation, updates, and removals (`taskService.js`).
+  - [x] Auto-trigger notifications on team collaborator additions (`teamService.js`).
+  - [x] Proactive deadline checker for tasks due within 24 hours.
+  - [x] Notification endpoints: `GET /api/notifications`, `PATCH /api/notifications/:id/read`, `PATCH /api/notifications/read-all`, `DELETE /api/notifications/:id`, `DELETE /api/notifications`.
+- **Frontend Tasks:**
+  - [x] Create `NotificationContext` with live polling and optimistic updates.
+  - [x] Interactive `NotificationMenu` flyout popover in Header with unread counter badge.
+  - [x] Filter by `All` and `Unread`.
+  - [x] Visual vector icons for deadlines, tasks, team, and system events.
+  - [x] Click-to-navigate with auto-mark-as-read, manual mark read, and dismiss actions.
+  - [x] "Mark all read" and "Clear all" capabilities.
+
+---
+
 ## 🗓️ Phase 3: Visual Schedules & Calendar
 
 ### Feature 3.1: Interactive Month/Week Calendar Grid
