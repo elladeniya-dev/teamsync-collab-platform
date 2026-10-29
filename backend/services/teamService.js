@@ -33,6 +33,32 @@ export const createMember = async (memberData) => {
   return member;
 };
 
+export const updateMember = async (id, updateData) => {
+  const member = await TeamMember.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!member) {
+    throw new ApiError(404, `Team member not found with id: ${id}`);
+  }
+
+  try {
+    await Notification.create({
+      title: 'Collaborator Profile Updated',
+      message: `${member.name} is now ${member.status} as ${member.role}.`,
+      type: 'team',
+      priority: 'low',
+      link: '/team',
+      metadata: { memberId: member._id.toString() },
+    });
+  } catch (notifErr) {
+    console.warn('Could not create notification for updated member:', notifErr.message);
+  }
+
+  return member;
+};
+
 export const deleteMember = async (id) => {
   const member = await TeamMember.findByIdAndDelete(id);
   if (!member) {

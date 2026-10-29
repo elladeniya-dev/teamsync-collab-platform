@@ -241,22 +241,33 @@ const Dashboard = () => {
               <p className="text-xs text-slate-400 italic text-center py-4">No team members added yet.</p>
             ) : (
               <div className="divide-y divide-slate-100">
-                {members.slice(0, 6).map((member) => (
-                  <div key={member._id} className="py-3 flex items-center justify-between first:pt-0 last:pb-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-xs font-semibold shadow-sm">
-                        {member.name.slice(0, 2).toUpperCase()}
+                {members.slice(0, 6).map((member) => {
+                  const statusColors = {
+                    'In a Meeting': 'text-amber-700 bg-amber-50 border-amber-200/60',
+                    'Away': 'text-blue-700 bg-blue-50 border-blue-200/60',
+                    'Offline': 'text-slate-600 bg-slate-100 border-slate-200/60',
+                    'Active': 'text-emerald-700 bg-emerald-50 border-emerald-200/60'
+                  };
+                  const currentStatus = member.status || 'Active';
+                  const badgeStyle = statusColors[currentStatus] || statusColors['Active'];
+
+                  return (
+                    <div key={member._id} className="py-3 flex items-center justify-between first:pt-0 last:pb-0">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-xs font-semibold shadow-sm shrink-0">
+                          {member.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{member.name}</p>
+                          <p className="text-xs text-indigo-600 font-medium truncate">{member.role || 'Fullstack Engineer'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">{member.name}</p>
-                        <p className="text-xs text-slate-400">{member.email}</p>
-                      </div>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${badgeStyle}`}>
+                        {currentStatus}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/50">
-                      Active
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

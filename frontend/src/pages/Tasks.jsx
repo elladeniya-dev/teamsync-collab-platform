@@ -394,7 +394,7 @@ const Tasks = () => {
                   <option value="">Select a team member</option>
                   {teamMembers.map((m) => (
                     <option key={m._id} value={m.name}>
-                      {m.name} ({m.email})
+                      {m.name} — {m.role || 'Fullstack Engineer'} ({m.status || 'Active'})
                     </option>
                   ))}
                 </select>

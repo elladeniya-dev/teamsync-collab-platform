@@ -57,6 +57,7 @@ export const taskApi = {
 export const teamApi = {
   getAll: () => apiClient.get('/api/team'),
   create: (memberData) => apiClient.post('/api/team', memberData),
+  update: (id, memberData) => apiClient.put(`/api/team/${id}`, memberData),
   delete: (id) => apiClient.delete(`/api/team/${id}`),
 };
 
@@ -68,6 +69,14 @@ export const notificationApi = {
   markAllAsRead: () => apiClient.patch('/api/notifications/read-all'),
   delete: (id) => apiClient.delete(`/api/notifications/${id}`),
   clearAll: () => apiClient.delete('/api/notifications'),
+};
+
+// Workspaces & Sprints API
+export const workspaceApi = {
+  getAll: () => apiClient.get('/api/workspaces'),
+  create: (data) => apiClient.post('/api/workspaces', data),
+  update: (id, data) => apiClient.put(`/api/workspaces/${id}`, data),
+  delete: (id) => apiClient.delete(`/api/workspaces/${id}`),
 };
 
 export default apiClient;

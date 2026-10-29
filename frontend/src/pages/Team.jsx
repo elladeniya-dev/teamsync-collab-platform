@@ -5,14 +5,66 @@ import {
   TeamIcon, 
   PlusIcon, 
   TrashIcon, 
-  SearchIcon 
+  SearchIcon,
+  CheckCircleIcon,
+  EditIcon
 } from '../components';
+
+export const TEAM_ROLES = [
+  'Project Lead',
+  'Frontend Developer',
+  'Backend Developer',
+  'Fullstack Engineer',
+  'UI/UX Designer',
+  'DevOps Engineer',
+  'QA Specialist',
+  'Product Manager',
+];
+
+export const TEAM_STATUSES = [
+  'Active',
+  'In a Meeting',
+  'Away',
+  'Offline',
+];
+
+export const getStatusStyle = (status) => {
+  switch (status) {
+    case 'In a Meeting':
+      return {
+        pill: 'bg-amber-50 text-amber-700 border-amber-200/80',
+        dot: 'bg-amber-500 animate-pulse',
+      };
+    case 'Away':
+      return {
+        pill: 'bg-blue-50 text-blue-700 border-blue-200/80',
+        dot: 'bg-blue-500',
+      };
+    case 'Offline':
+      return {
+        pill: 'bg-slate-100 text-slate-600 border-slate-200/80',
+        dot: 'bg-slate-400',
+      };
+    case 'Active':
+    default:
+      return {
+        pill: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+        dot: 'bg-emerald-500',
+      };
+  }
+};
 
 const Team = () => {
   const [members, setMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [newMember, setNewMember] = useState({ name: '', email: '' });
+  const [newMember, setNewMember] = useState({
+    name: '',
+    email: '',
+    role: 'Fullstack Engineer',
+    status: 'Active',
+  });
   const [search, setSearch] = useState('');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('All');
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -45,7 +97,7 @@ const Team = () => {
       return Swal.fire({
         icon: 'warning',
         title: 'Name Required',
-        text: 'Please enter member full name.',
+        text: 'Please enter collaborator full name.',
         confirmButtonColor: '#4f46e5'
       });
     }
@@ -61,15 +113,25 @@ const Team = () => {
     }
 
     try {
-      const res = await teamApi.create({ name, email });
+      const res = await teamApi.create({
+        name,
+        email,
+        role: newMember.role,
+        status: newMember.status,
+      });
       setMembers((prev) => [...prev, res.data]);
-      setNewMember({ name: '', email: '' });
+      setNewMember({
+        name: '',
+        email: '',
+        role: 'Fullstack Engineer',
+        status: 'Active',
+      });
       setIsAdding(false);
 
       Swal.fire({
         icon: 'success',
         title: 'Collaborator Added!',
-        text: `${name} has joined the team workspace.`,
+        text: `${name} has joined the team as ${newMember.role}.`,
         timer: 1800,
         showConfirmButton: false
       });
@@ -80,6 +142,33 @@ const Team = () => {
         title: 'Error',
         text: 'Failed to add team member.'
       });
+    }
+  };
+
+  const handleStatusChange = async (memberId, memberName, newStatus) => {
+    try {
+      // Optimistic update
+      setMembers((prev) =>
+        prev.map((m) => (m._id === memberId ? { ...m, status: newStatus } : m))
+      );
+      await teamApi.update(memberId, { status: newStatus });
+    } catch (err) {
+      console.error('Status update failed:', err);
+      fetchData();
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update member status.' });
+    }
+  };
+
+  const handleRoleChange = async (memberId, memberName, newRole) => {
+    try {
+      setMembers((prev) =>
+        prev.map((m) => (m._id === memberId ? { ...m, role: newRole } : m))
+      );
+      await teamApi.update(memberId, { role: newRole });
+    } catch (err) {
+      console.error('Role update failed:', err);
+      fetchData();
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update member role.' });
     }
   };
 
@@ -112,11 +201,17 @@ const Team = () => {
     }
   };
 
-  const filteredMembers = members.filter(
-    (m) =>
+  const filteredMembers = members.filter((m) => {
+    const matchSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.email.toLowerCase().includes(search.toLowerCase())
-  );
+      m.email.toLowerCase().includes(search.toLowerCase()) ||
+      (m.role && m.role.toLowerCase().includes(search.toLowerCase()));
+
+    const matchRole =
+      selectedRoleFilter === 'All' || m.role === selectedRoleFilter;
+
+    return matchSearch && matchRole;
+  });
 
   const getMemberTaskCount = (memberName) => {
     return tasks.filter((t) => t.assignee?.toLowerCase() === memberName?.toLowerCase()).length;
@@ -144,12 +239,12 @@ const Team = () => {
               {members.length} Members
             </span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">Manage teammates and workload distribution</p>
+          <p className="text-xs text-slate-500 mt-0.5">Manage team roles, real-time availability status, and workload</p>
         </div>
 
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition cursor-pointer"
         >
           <PlusIcon className="w-4 h-4" />
           <span>{isAdding ? 'Close Form' : 'Invite Member'}</span>
@@ -169,10 +264,10 @@ const Team = () => {
             <span className="text-xs text-slate-400">All fields required</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Full Name
+                Full Name *
               </label>
               <input
                 type="text"
@@ -186,7 +281,7 @@ const Team = () => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Email Address
+                Work Email *
               </label>
               <input
                 type="email"
@@ -197,36 +292,93 @@ const Team = () => {
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Role *
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                value={newMember.role}
+                onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+              >
+                {TEAM_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Availability Status *
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                value={newMember.status}
+                onChange={(e) => setNewMember({ ...newMember, status: e.target.value })}
+              >
+                {TEAM_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer"
             >
-              Confirm & Add
+              Confirm & Add Collaborator
             </button>
           </div>
         </form>
       )}
 
-      {/* Search Bar */}
-      <div className="relative">
-        <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Filter team by name or email..."
-          className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200/90 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Search and Role Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="relative flex-1">
+          <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Filter team by name, email, or role..."
+            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Role Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Role:</span>
+          {['All', 'Lead', 'Developer', 'Designer'].map((filterRole) => (
+            <button
+              key={filterRole}
+              onClick={() => setSelectedRoleFilter(filterRole === 'Lead' ? 'Project Lead' : filterRole === 'Developer' ? 'Fullstack Engineer' : filterRole === 'Designer' ? 'UI/UX Designer' : 'All')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                (selectedRoleFilter === 'All' && filterRole === 'All') ||
+                (selectedRoleFilter === 'Project Lead' && filterRole === 'Lead') ||
+                (selectedRoleFilter === 'Fullstack Engineer' && filterRole === 'Developer') ||
+                (selectedRoleFilter === 'UI/UX Designer' && filterRole === 'Designer')
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {filterRole}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Member Cards Grid */}
@@ -239,13 +391,15 @@ const Team = () => {
           <TeamIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <h3 className="text-base font-bold text-slate-700">No members found</h3>
           <p className="text-xs text-slate-400 mt-1">
-            {search ? 'No collaborators matched your filter.' : 'Invite your first collaborator above.'}
+            {search ? 'No collaborators matched your filter criteria.' : 'Invite your first collaborator above.'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredMembers.map((member, idx) => {
             const taskCount = getMemberTaskCount(member.name);
+            const statusConfig = getStatusStyle(member.status || 'Active');
+
             return (
               <div
                 key={member._id}
@@ -256,15 +410,18 @@ const Team = () => {
                     <div
                       className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
                         idx
-                      )} text-white font-bold text-base flex items-center justify-center shadow-md`}
+                      )} text-white font-bold text-base flex items-center justify-center shadow-md shrink-0`}
                     >
                       {member.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <h4 className="text-base font-bold text-slate-900 leading-snug">
+                    <div className="min-w-0">
+                      <h4 className="text-base font-bold text-slate-900 leading-snug truncate">
                         {member.name}
                       </h4>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[170px]">
+                      <p className="text-xs text-indigo-600 font-medium truncate">
+                        {member.role || 'Fullstack Engineer'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[170px]">
                         {member.email}
                       </p>
                     </div>
@@ -272,18 +429,32 @@ const Team = () => {
 
                   <button
                     onClick={() => handleRemove(member._id, member.name)}
-                    className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                    className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer shrink-0"
                     title="Remove member"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
 
+                {/* Footer: Dynamic Status Switcher + Task Count */}
                 <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 text-[11px]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    Active
-                  </span>
+                  {/* Interactive Status Selector */}
+                  <div className="relative group">
+                    <select
+                      value={member.status || 'Active'}
+                      onChange={(e) => handleStatusChange(member._id, member.name, e.target.value)}
+                      className={`appearance-none pl-5 pr-4 py-1 rounded-full text-[11px] font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 transition ${statusConfig.pill}`}
+                      title="Click to update availability status"
+                    >
+                      {TEAM_STATUSES.map((st) => (
+                        <option key={st} value={st} className="bg-white text-slate-800">
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                    {/* Live Dot Indicator */}
+                    <span className={`w-2 h-2 rounded-full absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none ${statusConfig.dot}`}></span>
+                  </div>
 
                   <span className="text-slate-500 font-medium">
                     <strong className="text-slate-900 font-semibold">{taskCount}</strong> assigned {taskCount === 1 ? 'task' : 'tasks'}
