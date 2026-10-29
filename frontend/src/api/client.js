@@ -9,6 +9,42 @@ export const apiClient = axios.create({
   },
 });
 
+// Request Interceptor: Attach JWT Token if present
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('teamsync_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Handle 401 Unauthorized
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // If unauthorized and on a protected route, token is invalid/expired
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        localStorage.removeItem('teamsync_token');
+        localStorage.removeItem('teamsync_user');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Authentication API
+export const authApi = {
+  googleAuth: (credential) => apiClient.post('/api/auth/google', { credential }),
+  register: (userData) => apiClient.post('/api/auth/register', userData),
+  login: (credentials) => apiClient.post('/api/auth/login', credentials),
+  getMe: () => apiClient.get('/api/auth/me'),
+};
+
 // Tasks API
 export const taskApi = {
   getAll: () => apiClient.get('/api/tasks'),

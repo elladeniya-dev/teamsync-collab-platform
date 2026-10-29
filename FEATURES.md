@@ -144,17 +144,21 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ## 🔐 Phase 4: Authentication, Profiles & Workspaces
 
-### Feature 4.1: User Authentication & JWT
-- **Status:** ⬜ Planned
-- **Goal:** Secure login/registration so users only access their organization's data.
+### Feature 4.1: User Authentication, Google OAuth & Account Linking
+- **Status:** ✅ Completed
+- **Goal:** Secure login/registration with Google OAuth and unified account linking for same Gmail addresses.
 - **Backend Tasks:**
-  - [ ] Create `User` model with password hashing (`bcryptjs`).
-  - [ ] Auth endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
-  - [ ] Protect task and team routes with JWT verification middleware.
+  - [x] Create `User` model with password hashing (`bcryptjs`) and Google ID support.
+  - [x] Google token verification using official `google-auth-library`.
+  - [x] Unified account linking: automatically merges manual email accounts with Google sign-ins.
+  - [x] Auth endpoints: `POST /api/auth/google`, `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+  - [x] JWT token generation and verification middleware (`protect`).
 - **Frontend Tasks:**
-  - [ ] Create `/login` and `/register` pages.
-  - [ ] Store auth token in `localStorage` or secure cookie.
-  - [ ] Auth route guards and user profile menu in header/sidebar.
+  - [x] Integrated `@react-oauth/google` Google Identity Services wrapper.
+  - [x] Created `AuthContext` managing global user state, token persistence, and session verification.
+  - [x] Created `/login` page supporting both one-tap Google Sign-In and manual Email/Password.
+  - [x] Built `ProtectedRoute` routing guard protecting workspace screens.
+  - [x] Updated Sidebar with user avatar, name, email, and one-click Sign Out.
 
 ---
 

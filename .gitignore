@@ -1,0 +1,17 @@
+# Secrets & Google Credentials
+client_secret_*.json
+*.env
+.env*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
