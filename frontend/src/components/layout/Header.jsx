@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { SearchIcon, BellIcon, PlusIcon } from './Icons';
+import { BellIcon, PlusIcon } from '../common/Icons';
 
 const PAGE_TITLES = {
   '/': { title: 'Dashboard', subtitle: 'Real-time overview of tasks, team workload, and upcoming deadlines' },
@@ -14,7 +14,7 @@ const Header = ({ onOpenNewTask }) => {
   const current = PAGE_TITLES[location.pathname] || { title: 'TeamSync', subtitle: 'Collaboration Platform' };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0">
       <div>
         <h1 className="text-xl font-bold text-slate-900 tracking-tight">{current.title}</h1>
         <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">{current.subtitle}</p>

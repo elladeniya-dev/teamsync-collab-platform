@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { taskApi, teamApi } from '../api/client';
-import Modal from '../components/Modal';
+import { 
+  Modal, 
+  PlusIcon, 
+  SearchIcon, 
+  TrashIcon, 
+  EditIcon, 
+  ClockIcon, 
+  CheckCircleIcon 
+} from '../components';
+import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
+import { getTypeStyle, TASK_TYPES } from '../utils/taskHelpers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import dayjs from 'dayjs';
-import { 
-  PlusIcon, 
-  SearchIcon, 
-  FilterIcon, 
-  TrashIcon, 
-  EditIcon, 
-  ClockIcon, 
-  AlertCircleIcon, 
-  CheckCircleIcon,
-  UserIcon
-} from '../components/Icons';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -88,7 +87,7 @@ const Tasks = () => {
 
   const handleSave = async (e) => {
     e?.preventDefault();
-    const { title, assignee, deadline, type } = taskForm;
+    const { title, assignee, deadline } = taskForm;
 
     if (!title.trim()) {
       return Swal.fire({
@@ -199,50 +198,8 @@ const Tasks = () => {
     });
   }, [tasks, searchQuery, selectedType, selectedAssignee]);
 
-  const getTypeStyle = (type) => {
-    switch (type) {
-      case 'Meeting':
-        return {
-          pill: 'bg-blue-50 text-blue-700 border-blue-200/80',
-          border: 'border-l-blue-500'
-        };
-      case 'Deadline':
-        return {
-          pill: 'bg-rose-50 text-rose-700 border-rose-200/80',
-          border: 'border-l-rose-500'
-        };
-      case 'Review':
-        return {
-          pill: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-          border: 'border-l-emerald-500'
-        };
-      default:
-        return {
-          pill: 'bg-slate-100 text-slate-700 border-slate-200',
-          border: 'border-l-slate-400'
-        };
-    }
-  };
-
-  const getRelativeInfo = (deadlineStr) => {
-    if (!deadlineStr) return { text: 'No deadline', color: 'text-slate-400' };
-    const now = new Date();
-    const deadline = new Date(deadlineStr);
-    const diffHours = (deadline - now) / (1000 * 60 * 60);
-
-    if (diffHours < 0) {
-      const days = Math.abs(Math.round(diffHours / 24));
-      return { text: `Overdue by ${days === 0 ? 'hours' : days + 'd'}`, color: 'text-rose-600 font-semibold' };
-    }
-    if (diffHours <= 24) {
-      return { text: 'Due today', color: 'text-amber-600 font-semibold' };
-    }
-    const days = Math.round(diffHours / 24);
-    return { text: `Due in ${days} days`, color: 'text-slate-500' };
-  };
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 w-full">
       {/* Top Bar with Title and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -278,7 +235,7 @@ const Tasks = () => {
         {/* Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Type:</span>
-          {['All', 'Meeting', 'Deadline', 'Review'].map((type) => (
+          {['All', ...TASK_TYPES].map((type) => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -320,7 +277,7 @@ const Tasks = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTasks.map((task) => {
             const style = getTypeStyle(task.type);
-            const relative = getRelativeInfo(task.deadline);
+            const relative = getRelativeDeadline(task.deadline);
             return (
               <div
                 key={task._id}
@@ -350,15 +307,7 @@ const Tasks = () => {
                   {/* Deadline row */}
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
                     <ClockIcon className="w-3.5 h-3.5 text-slate-400" />
-                    <span>
-                      {new Date(task.deadline).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+                    <span>{formatDate(task.deadline)}</span>
                   </div>
                 </div>
 

@@ -5,10 +5,8 @@ import {
   TeamIcon, 
   PlusIcon, 
   TrashIcon, 
-  UserIcon, 
-  CheckCircleIcon,
   SearchIcon 
-} from '../components/Icons';
+} from '../components';
 
 const Team = () => {
   const [members, setMembers] = useState([]);
@@ -124,7 +122,6 @@ const Team = () => {
     return tasks.filter((t) => t.assignee?.toLowerCase() === memberName?.toLowerCase()).length;
   };
 
-  // Generate pleasant distinct avatar colors
   const getAvatarGradient = (idx) => {
     const gradients = [
       'from-indigo-600 to-violet-600',
@@ -137,7 +134,7 @@ const Team = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 w-full">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

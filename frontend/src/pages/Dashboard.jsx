@@ -9,8 +9,10 @@ import {
   AlertCircleIcon, 
   CheckCircleIcon,
   ChevronRightIcon,
-  PlusIcon
-} from '../components/Icons';
+  PlusIcon 
+} from '../components';
+import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
+import { getTypeStyle } from '../utils/taskHelpers';
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -44,49 +46,8 @@ const Dashboard = () => {
   const overdueTasks = tasks.filter(t => new Date(t.deadline) < now);
   const meetings = tasks.filter(t => t.type === 'Meeting');
 
-  const getPriorityBadge = (type) => {
-    switch (type) {
-      case 'Deadline':
-        return 'bg-rose-50 text-rose-700 border-rose-200/60';
-      case 'Meeting':
-        return 'bg-blue-50 text-blue-700 border-blue-200/60';
-      case 'Review':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
-      default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const getRelativeDeadline = (deadlineStr) => {
-    if (!deadlineStr) return 'No date';
-    const deadline = new Date(deadlineStr);
-    const diffHours = (deadline - now) / (1000 * 60 * 60);
-
-    if (diffHours < 0) {
-      const days = Math.abs(Math.round(diffHours / 24));
-      return { text: `Overdue by ${days === 0 ? 'today' : days + 'd'}`, color: 'text-rose-600 font-semibold' };
-    }
-    if (diffHours <= 24) {
-      return { text: 'Due today', color: 'text-amber-600 font-semibold' };
-    }
-    if (diffHours <= 48) {
-      return { text: 'Due tomorrow', color: 'text-indigo-600 font-medium' };
-    }
-    const days = Math.round(diffHours / 24);
-    return { text: `Due in ${days} days`, color: 'text-slate-500' };
-  };
-
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 w-full">
       {/* Welcome Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-8 text-white shadow-xl shadow-indigo-950/10">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -215,6 +176,7 @@ const Dashboard = () => {
             ) : (
               upcomingTasks.map((task) => {
                 const relative = getRelativeDeadline(task.deadline);
+                const style = getTypeStyle(task.type);
                 return (
                   <div
                     key={task._id}
@@ -222,7 +184,7 @@ const Dashboard = () => {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2.5">
-                        <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getPriorityBadge(task.type)}`}>
+                        <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold border ${style.pill}`}>
                           {task.type}
                         </span>
                         <h4 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition">

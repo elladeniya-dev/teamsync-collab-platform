@@ -6,7 +6,7 @@ import {
   CalendarIcon, 
   TeamIcon, 
   LayersIcon 
-} from './Icons';
+} from '../common/Icons';
 
 const Sidebar = () => {
   const navItems = [
@@ -74,8 +74,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* User Footer Profile */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-900/50">
+      {/* User Profile Footer */}
+      <div className="p-4 border-t border-slate-800/80 bg-slate-900/50 shrink-0">
         <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/60 transition cursor-pointer">
           <div className="relative">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow">

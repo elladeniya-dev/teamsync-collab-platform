@@ -1,28 +1,40 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import taskRoutes from './routes/taskRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
+import app from './app.js';
+import { connectDB } from './config/db.js';
 
+// Load environment variables
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Connect to Database and start server
+const startServer = async () => {
+  await connectDB();
 
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 TeamSync Backend running on http://localhost:${PORT}`);
+    console.log(`🩺 Health check available at http://localhost:${PORT}/health`);
+  });
 
-app.use('/api/tasks', taskRoutes);
-app.use('/api/team', teamRoutes);
+  // Handle Unhandled Promise Rejections (e.g. database auth failure)
+  process.on('unhandledRejection', (err) => {
+    console.error('💥 UNHANDLED REJECTION! Shutting down gracefully...', err);
+    server.close(() => {
+      process.exit(1);
+    });
+  });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
-  })
-  .catch((err) => console.error('❌ Connection error:', err));
+  // Graceful shutdown on SIGTERM / SIGINT
+  const shutdown = () => {
+    console.log('🛑 Graceful shutdown initiated...');
+    server.close(() => {
+      console.log('💤 Process terminated.');
+      process.exit(0);
+    });
+  };
 
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+};
+
+startServer();

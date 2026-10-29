@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { taskApi } from '../api/client';
 import { 
+  Modal, 
   ChevronLeftIcon, 
-  ChevronRightIcon, 
-  ClockIcon, 
-  CalendarIcon,
-  CheckCircleIcon,
-  UserIcon
-} from '../components/Icons';
-import Modal from '../components/Modal';
+  ChevronRightIcon 
+} from '../components';
+import { formatDate } from '../utils/dateUtils';
+import { getTypeStyle } from '../utils/taskHelpers';
 
 const Calendar = () => {
   const [tasks, setTasks] = useState([]);
@@ -48,11 +46,8 @@ const Calendar = () => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  // First day of current month (0: Sun, 1: Mon, ...)
   const firstDayIndex = new Date(year, month, 1).getDay();
-  // Total days in current month
   const totalDays = new Date(year, month + 1, 0).getDate();
-  // Total days in previous month
   const prevMonthDays = new Date(year, month, 0).getDate();
 
   const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
@@ -70,23 +65,9 @@ const Calendar = () => {
     }
   });
 
-  const getTaskChipStyle = (type) => {
-    switch (type) {
-      case 'Meeting':
-        return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
-      case 'Deadline':
-        return 'bg-rose-100 text-rose-800 border-rose-200 hover:bg-rose-200';
-      case 'Review':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200';
-      default:
-        return 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200';
-    }
-  };
-
   // Days array for the grid
   const daysArray = [];
 
-  // Fill in trailing days from previous month
   for (let i = firstDayIndex - 1; i >= 0; i--) {
     daysArray.push({
       day: prevMonthDays - i,
@@ -95,7 +76,6 @@ const Calendar = () => {
     });
   }
 
-  // Fill in days of current month
   for (let i = 1; i <= totalDays; i++) {
     daysArray.push({
       day: i,
@@ -109,7 +89,6 @@ const Calendar = () => {
     });
   }
 
-  // Fill in leading days of next month to complete the 35 or 42 grid cells
   const remainingCells = 42 - daysArray.length;
   for (let i = 1; i <= (remainingCells >= 7 ? remainingCells - 7 : remainingCells); i++) {
     daysArray.push({
@@ -203,9 +182,9 @@ const Calendar = () => {
                   <button
                     key={task._id}
                     onClick={() => setSelectedTask(task)}
-                    className={`w-full text-left truncate px-2 py-0.5 rounded text-[11px] font-semibold border transition block ${getTaskChipStyle(
+                    className={`w-full text-left truncate px-2 py-0.5 rounded text-[11px] font-semibold border transition block ${getTypeStyle(
                       task.type
-                    )}`}
+                    ).chip}`}
                     title={`${task.title} (${task.assignee || 'Unassigned'})`}
                   >
                     {task.title}
@@ -226,7 +205,7 @@ const Calendar = () => {
         {selectedTask && (
           <div className="space-y-4">
             <div>
-              <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold border ${getTaskChipStyle(selectedTask.type)} mb-2`}>
+              <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold border ${getTypeStyle(selectedTask.type).pill} mb-2`}>
                 {selectedTask.type}
               </span>
               <h3 className="text-xl font-bold text-slate-900">{selectedTask.title}</h3>
@@ -246,12 +225,7 @@ const Calendar = () => {
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-slate-400 block mb-0.5">Due Date</span>
                 <span className="font-semibold text-slate-800">
-                  {new Date(selectedTask.deadline).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDate(selectedTask.deadline)}
                 </span>
               </div>
             </div>
