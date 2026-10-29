@@ -8,13 +8,11 @@ import {
   TrashIcon, 
   EditIcon, 
   ClockIcon, 
+  CalendarIcon,
   CheckCircleIcon 
 } from '../components';
 import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
 import { getTypeStyle, TASK_TYPES } from '../utils/taskHelpers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import dayjs from 'dayjs';
 
 const Tasks = () => {
@@ -34,7 +32,7 @@ const Tasks = () => {
     title: '',
     description: '',
     assignee: '',
-    deadline: dayjs(),
+    deadline: dayjs().add(1, 'day'),
     type: 'Review'
   });
 
@@ -66,7 +64,7 @@ const Tasks = () => {
       title: '',
       description: '',
       assignee: teamMembers.length > 0 ? teamMembers[0].name : '',
-      deadline: dayjs().add(1, 'day'),
+      deadline: dayjs().add(1, 'day').hour(17).minute(0),
       type: 'Review'
     });
     setIsModalOpen(true);
@@ -107,11 +105,11 @@ const Tasks = () => {
       });
     }
 
-    if (dayjs(deadline).isBefore(dayjs())) {
+    if (!deadline || !dayjs(deadline).isValid() || dayjs(deadline).isBefore(dayjs())) {
       return Swal.fire({
         icon: 'warning',
         title: 'Invalid Deadline',
-        text: 'Deadline must be set in the future.',
+        text: 'Deadline must be set to a valid future date and time.',
         confirmButtonColor: '#4f46e5'
       });
     }
@@ -119,7 +117,7 @@ const Tasks = () => {
     try {
       const payload = {
         ...taskForm,
-        deadline: taskForm.deadline.toISOString()
+        deadline: dayjs(taskForm.deadline).toISOString()
       };
 
       if (isEditing) {
@@ -211,7 +209,7 @@ const Tasks = () => {
 
         <button
           onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition cursor-pointer"
         >
           <PlusIcon className="w-4 h-4" />
           <span>Add New Task</span>
@@ -239,7 +237,7 @@ const Tasks = () => {
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                 selectedType === type
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -267,7 +265,7 @@ const Tasks = () => {
           </p>
           <button
             onClick={handleOpenAdd}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition cursor-pointer"
           >
             <PlusIcon className="w-3.5 h-3.5" />
             <span>Create Task</span>
@@ -325,14 +323,14 @@ const Tasks = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEdit(task)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
                       title="Edit task"
                     >
                       <EditIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(task._id, task.title)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                       title="Delete task"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -350,7 +348,7 @@ const Tasks = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={isEditing ? 'Edit Task Deliverable' : 'Add New Task'}
-        maxWidth="max-w-2xl"
+        maxWidth="max-w-xl"
       >
         <form onSubmit={handleSave} className="space-y-4">
           <div>
@@ -391,6 +389,7 @@ const Tasks = () => {
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                   value={taskForm.assignee}
                   onChange={(e) => setTaskForm({ ...taskForm, assignee: e.target.value })}
+                  required
                 >
                   <option value="">Select a team member</option>
                   {teamMembers.map((m) => (
@@ -428,35 +427,77 @@ const Tasks = () => {
             </div>
           </div>
 
-          {/* DateTime Picker */}
+          {/* Deadline Date & Time Picker */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Deadline Date & Time *
-            </label>
-            <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex justify-center">
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <StaticDateTimePicker
-                  orientation="landscape"
-                  value={taskForm.deadline}
-                  onChange={(newVal) => setTaskForm({ ...taskForm, deadline: newVal })}
-                  minDateTime={dayjs()}
-                />
-              </LocalizationProvider>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Deadline Date & Time *
+              </label>
+              {taskForm.deadline && dayjs(taskForm.deadline).isValid() && (
+                <span className="text-[11px] text-indigo-600 font-medium">
+                  Due: {dayjs(taskForm.deadline).format('MMM D, YYYY [at] h:mm A')}
+                </span>
+              )}
+            </div>
+
+            <div className="relative">
+              <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="datetime-local"
+                value={taskForm.deadline && dayjs(taskForm.deadline).isValid() ? dayjs(taskForm.deadline).format('YYYY-MM-DDTHH:mm') : ''}
+                onChange={(e) => setTaskForm({ ...taskForm, deadline: dayjs(e.target.value) })}
+                min={dayjs().format('YYYY-MM-DDTHH:mm')}
+                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium text-slate-700"
+                required
+              />
+            </div>
+
+            {/* Quick Preset Chips */}
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <span className="text-[11px] text-slate-400 font-medium mr-1">Quick Presets:</span>
+              <button
+                type="button"
+                onClick={() => setTaskForm({ ...taskForm, deadline: dayjs().add(1, 'day').hour(17).minute(0) })}
+                className="text-[11px] font-medium px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-lg transition border border-slate-200/60 cursor-pointer"
+              >
+                Tomorrow 5 PM
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskForm({ ...taskForm, deadline: dayjs().add(3, 'day').hour(17).minute(0) })}
+                className="text-[11px] font-medium px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-lg transition border border-slate-200/60 cursor-pointer"
+              >
+                In 3 Days
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskForm({ ...taskForm, deadline: dayjs().add(7, 'day').hour(17).minute(0) })}
+                className="text-[11px] font-medium px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-lg transition border border-slate-200/60 cursor-pointer"
+              >
+                Next Week
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskForm({ ...taskForm, deadline: dayjs().endOf('month').hour(18).minute(0) })}
+                className="text-[11px] font-medium px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-lg transition border border-slate-200/60 cursor-pointer"
+              >
+                End of Month
+              </button>
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Form Action Buttons - Always Visible and Clean */}
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer"
             >
               {isEditing ? 'Save Changes' : 'Create Task'}
             </button>
