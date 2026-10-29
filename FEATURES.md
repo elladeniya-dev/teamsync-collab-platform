@@ -14,10 +14,12 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 ## 🔍 System Audit: Live vs. Hardcoded Features
 
 ### 🟢 100% Live & Cloud-Connected Capabilities
-- **MongoDB Atlas Cloud Database:** Real-time persistence across replica sets (`mongodb+srv://...`). All tasks, team members, user accounts, and notifications are stored and indexed in the cloud.
+- **MongoDB Atlas Cloud Database:** Real-time persistence across replica sets (`mongodb+srv://...`). All tasks, team members, user accounts, workspaces, and notifications are stored and indexed in the cloud.
 - **User Authentication & Google Identity Services:** Official Google OAuth integration with ID-token backend verification (`google-auth-library`), `bcryptjs` password hashing, JWT session cookies/headers, and **unified account linking** for matching Gmail addresses.
+- **Dynamic Workspaces & Sprints:** Full-featured workspace management with instant switching, custom sprint cycling, inline project creation, and database persistence (`/api/workspaces`).
+- **Team Directory with Roles & Availability Status:** Configurable collaborator roles (`Project Lead`, `Frontend`, `Backend`, `UI/UX`, `DevOps`, `QA`, `Product Manager`) and live status indicators (`Active`, `In a Meeting`, `Away`, `Offline`) with inline quick switching.
 - **Task Deliverables Management:** Full CRUD operations (`GET`, `POST`, `PUT`, `DELETE`). Dynamic assignee selection from the database, validation for future deadlines, and real-time search/filtering.
-- **Workspace Notification Center:** Full-stack notification engine with background polling, dynamic unread badge counters, automated event triggers on task/team mutations, and proactive 24-hour deadline alert detection.
+- **Workspace Notification Center:** Full-stack notification engine with background polling, dynamic unread badge counters, automated event triggers on task/team/sprint mutations, and proactive 24-hour deadline alert detection.
 - **Interactive Calendar Grid:** Dynamically maps real tasks from MongoDB onto monthly calendar grids with month navigation, today jumps, and deliverable preview modals.
 - **Dashboard Analytics:** Dynamic KPI calculation (Active Tasks, Upcoming Syncs, Overdue Deliverables, Collaborator Counts) calculated directly from database records.
 - **Design System & Zero-Emoji Icon Library:** Clean SVG vector icons across the entire frontend with zero emojis, custom glassmorphic modal design, and responsive layout.
@@ -26,16 +28,10 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 1. **Forgot Password Flow (`frontend/src/pages/Login.jsx`):**
    - *Current State:* Simulates dispatching a reset email with an in-app confirmation banner (`Password reset link dispatched to user@company.com`).
    - *Upgrade Required:* Integrate an SMTP email service provider (e.g. Nodemailer, Resend, SendGrid) to send real password reset tokens.
-2. **Workspace & Sprint Switcher (`frontend/src/components/layout/Sidebar.jsx`):**
-   - *Current State:* Displays static text badges (`"Main Workspace"` and `"Sprint 1"`).
-   - *Upgrade Required:* Add `Workspace` and `Sprint` schemas to MongoDB to allow creating and toggling between multiple projects and sprint cycles.
-3. **Team Member Status & Role (`frontend/src/pages/Team.jsx`):**
-   - *Current State:* Displays a hardcoded `"Active"` badge for all members.
-   - *Upgrade Required:* Add `role` (`Lead`, `Developer`, `Designer`, `QA`) and `status` (`Active`, `Away`, `Offline`) fields to `TeamMember.js`.
-4. **Cloud Heartbeat Badge (`frontend/src/components/layout/Header.jsx`):**
+2. **Cloud Heartbeat Badge (`frontend/src/components/layout/Header.jsx`):**
    - *Current State:* Displays a static `"Live Cloud"` visual indicator with a pulsing green dot.
    - *Upgrade Required:* Wire to a live `/health` heartbeat poll or WebSocket connection state.
-5. **Task Assignee Reference (`backend/models/Task.js`):**
+3. **Task Assignee Reference (`backend/models/Task.js`):**
    - *Current State:* Stores assignee as a plain text string (`"Alex Morgan"`).
    - *Upgrade Required:* Reference `TeamMember` or `User` via MongoDB `ObjectId` (`ref: 'TeamMember'`).
 
@@ -210,14 +206,19 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 
 ---
 
-### Feature 4.2: Workspaces / Multiple Projects
-- **Status:** ⬜ Planned
-- **Goal:** Separate tasks by client, sprint, or department.
+### Feature 4.2: Workspaces & Sprint Management
+- **Status:** ✅ Completed
+- **Goal:** Separate deliverables by workspace/project and manage dynamic sprint cycles.
 - **Backend Tasks:**
-  - [ ] Create `Project` / `Workspace` model (`name`, `description`, `members`, `owner`).
-  - [ ] Associate tasks with `projectId`.
+  - [x] Create `Workspace` model (`name`, `currentSprint`, `sprints`, `description`, `isDefault`).
+  - [x] Auto-seed initial standard workspaces (`Main Workspace`, `Mobile App Launch`, `Core Platform API`).
+  - [x] REST endpoints: `GET /api/workspaces`, `POST /api/workspaces`, `PUT /api/workspaces/:id`, `DELETE /api/workspaces/:id`.
+  - [x] Automated notifications on workspace creation and active sprint transitions.
 - **Frontend Tasks:**
-  - [ ] Workspace/Project switcher dropdown in top navigation.
+  - [x] Create `WorkspaceContext` managing global workspace state and `localStorage` persistence.
+  - [x] Interactive Workspace & Sprint flyout menu in Sidebar with active indicator.
+  - [x] Dropdown to switch current sprint or advance sprint cycle.
+  - [x] Inline new workspace creation with automatic switch.
 
 ---
 
