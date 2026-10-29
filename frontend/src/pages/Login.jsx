@@ -11,7 +11,9 @@ import {
   UserIcon, 
   EyeIcon, 
   EyeOffIcon,
-  SparklesIcon 
+  SparklesIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon 
 } from '../components';
 
 const Login = () => {
@@ -195,7 +197,7 @@ const Login = () => {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>📘</span>
+                <LockIcon className="w-3.5 h-3.5" />
                 <span>Sign In</span>
               </button>
 
@@ -211,7 +213,7 @@ const Login = () => {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>📖</span>
+                <UserIcon className="w-3.5 h-3.5" />
                 <span>Create Account</span>
               </button>
             </div>
@@ -327,15 +329,15 @@ const Login = () => {
                           ) : (
                             <>
                               <span>Sign In with Email</span>
-                              <span className="text-indigo-200">➔</span>
+                              <ChevronRightIcon className="w-4 h-4 text-indigo-200" />
                             </>
                           )}
                         </div>
 
                         {/* Back Face (Hover 3D Flip) */}
                         <div className="flip-face-back absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-600/40 flex items-center justify-center gap-2 border border-violet-400/40">
-                          <span>📖 Turn Page & Enter</span>
-                          <span>✨</span>
+                          <span>Turn Page & Enter</span>
+                          <LockIcon className="w-4 h-4 text-violet-200" />
                         </div>
                       </button>
                     </div>
@@ -353,7 +355,7 @@ const Login = () => {
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4 ml-1"
                   >
-                    Flip to Register 📖
+                    Switch to Register
                   </button>
                 </div>
               </div>
@@ -477,15 +479,15 @@ const Login = () => {
                           ) : (
                             <>
                               <span>Create Workspace Account</span>
-                              <span className="text-indigo-200">➔</span>
+                              <ChevronRightIcon className="w-4 h-4 text-indigo-200" />
                             </>
                           )}
                         </div>
 
                         {/* Back Face */}
                         <div className="flip-face-back absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-600/40 flex items-center justify-center gap-2 border border-violet-400/40">
-                          <span>🚀 Launch New Workspace</span>
-                          <span>✨</span>
+                          <span>Launch New Workspace</span>
+                          <SparklesIcon className="w-4 h-4 text-violet-200" />
                         </div>
                       </button>
                     </div>
@@ -503,7 +505,7 @@ const Login = () => {
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4 ml-1"
                   >
-                    Flip to Sign In 📘
+                    Switch to Sign In
                   </button>
                 </div>
               </div>
