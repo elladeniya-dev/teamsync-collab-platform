@@ -1,13 +1,43 @@
-# 🚀 TeamSync — Feature Roadmap & Specifications
+# 🚀 TeamSync — Feature Roadmap, System Audit & Specifications
 
-A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, modern team collaboration and productivity platform.
+A comprehensive feature roadmap, architectural specifications, and implementation audit for **TeamSync** — a high-velocity team collaboration and sprint management platform.
 
 ---
 
 ## 📌 Status Legend
-- ⬜ **Planned**
-- ⏳ **In Progress**
-- ✅ **Completed**
+- ⬜ **Planned** (Upcoming feature backlog)
+- ⏳ **In Progress** (Active implementation)
+- ✅ **Completed** (Fully functional in production)
+
+---
+
+## 🔍 System Audit: Live vs. Hardcoded Features
+
+### 🟢 100% Live & Cloud-Connected Capabilities
+- **MongoDB Atlas Cloud Database:** Real-time persistence across replica sets (`mongodb+srv://...`). All tasks, team members, user accounts, and notifications are stored and indexed in the cloud.
+- **User Authentication & Google Identity Services:** Official Google OAuth integration with ID-token backend verification (`google-auth-library`), `bcryptjs` password hashing, JWT session cookies/headers, and **unified account linking** for matching Gmail addresses.
+- **Task Deliverables Management:** Full CRUD operations (`GET`, `POST`, `PUT`, `DELETE`). Dynamic assignee selection from the database, validation for future deadlines, and real-time search/filtering.
+- **Workspace Notification Center:** Full-stack notification engine with background polling, dynamic unread badge counters, automated event triggers on task/team mutations, and proactive 24-hour deadline alert detection.
+- **Interactive Calendar Grid:** Dynamically maps real tasks from MongoDB onto monthly calendar grids with month navigation, today jumps, and deliverable preview modals.
+- **Dashboard Analytics:** Dynamic KPI calculation (Active Tasks, Upcoming Syncs, Overdue Deliverables, Collaborator Counts) calculated directly from database records.
+- **Design System & Zero-Emoji Icon Library:** Clean SVG vector icons across the entire frontend with zero emojis, custom glassmorphic modal design, and responsive layout.
+
+### 🟡 Current Hardcoded / Simulated Functions (To Be Upgraded)
+1. **Forgot Password Flow (`frontend/src/pages/Login.jsx`):**
+   - *Current State:* Simulates dispatching a reset email with an in-app confirmation banner (`Password reset link dispatched to user@company.com`).
+   - *Upgrade Required:* Integrate an SMTP email service provider (e.g. Nodemailer, Resend, SendGrid) to send real password reset tokens.
+2. **Workspace & Sprint Switcher (`frontend/src/components/layout/Sidebar.jsx`):**
+   - *Current State:* Displays static text badges (`"Main Workspace"` and `"Sprint 1"`).
+   - *Upgrade Required:* Add `Workspace` and `Sprint` schemas to MongoDB to allow creating and toggling between multiple projects and sprint cycles.
+3. **Team Member Status & Role (`frontend/src/pages/Team.jsx`):**
+   - *Current State:* Displays a hardcoded `"Active"` badge for all members.
+   - *Upgrade Required:* Add `role` (`Lead`, `Developer`, `Designer`, `QA`) and `status` (`Active`, `Away`, `Offline`) fields to `TeamMember.js`.
+4. **Cloud Heartbeat Badge (`frontend/src/components/layout/Header.jsx`):**
+   - *Current State:* Displays a static `"Live Cloud"` visual indicator with a pulsing green dot.
+   - *Upgrade Required:* Wire to a live `/health` heartbeat poll or WebSocket connection state.
+5. **Task Assignee Reference (`backend/models/Task.js`):**
+   - *Current State:* Stores assignee as a plain text string (`"Alex Morgan"`).
+   - *Upgrade Required:* Reference `TeamMember` or `User` via MongoDB `ObjectId` (`ref: 'TeamMember'`).
 
 ---
 
@@ -18,7 +48,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 - **Goal:** Allow tasks to be categorized by execution status and urgency.
 - **Backend Tasks:**
   - [ ] Update `backend/models/Task.js` schema:
-    - `status`: `['Todo', 'In Progress', 'Under Review', 'Completed']` (default: `'Todo'`)
+    - `status`: `['To Do', 'In Progress', 'Under Review', 'Done']` (default: `'To Do'`)
     - `priority`: `['Low', 'Medium', 'High', 'Urgent']` (default: `'Medium'`)
     - `tags`: `[String]`
   - [ ] Update `taskController.js` to handle status/priority filtering and updates.
@@ -30,8 +60,8 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 ---
 
 ### Feature 1.2: Dynamic Team Assignee Linking
-- **Status:** ⬜ Planned
-- **Goal:** Replace raw text assignee input with dynamic selection from registered team members.
+- **Status:** ⏳ In Progress (Frontend dynamic, Schema upgrade pending)
+- **Goal:** Replace raw text assignee input with dynamic selection and database relation to registered team members.
 - **Backend Tasks:**
   - [ ] Update `Task.js` schema to reference `TeamMember` via ObjectId:
     ```js
@@ -39,8 +69,8 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
     ```
   - [ ] Populate `assignee` details in task queries (`Task.find().populate('assignee')`).
 - **Frontend Tasks:**
-  - [ ] Replace text input in task modal with an Assignee `<select>` populated from `/api/team`.
-  - [ ] Display assignee name, email, and avatar badge on task cards.
+  - [x] Replaced text input in task modal with dynamic Assignee `<select>` populated from `/api/team`.
+  - [x] Display assignee name and avatar badge on task cards.
 
 ---
 
@@ -57,7 +87,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ### Feature 1.4: Subtasks & Progress Checklist
 - **Status:** ⬜ Planned
-- **Goal:** Break down larger tasks into verifiable checklist items.
+- **Goal:** Break down larger deliverables into verifiable checklist items.
 - **Backend Tasks:**
   - [ ] Add `subtasks` array to `Task.js`:
     ```js
@@ -71,12 +101,12 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 ---
 
 ### Feature 1.5: Search, Filtering & Sorting
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Instantly locate and organize tasks.
 - **Frontend Tasks:**
-  - [ ] Search input matching title and description.
-  - [ ] Filter by: Assignee, Priority, Status, Task Type.
-  - [ ] Sort by: Deadline, Priority, Date Created.
+  - [x] Search input matching title, description, and assignee in real time.
+  - [x] Filter by task type pills (`All`, `Review`, `Meeting`, `Deadline`).
+  - [x] Relative deadline countdown badges (`Due today`, `Overdue by Xd`, `Due in X days`).
 
 ---
 
@@ -84,10 +114,10 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ### Feature 2.1: Real-Time Live Sync (Socket.io)
 - **Status:** ⬜ Planned
-- **Goal:** Multi-user live updates without page refreshing.
+- **Goal:** Instant multi-user live updates without page refreshing or background polling.
 - **Backend Tasks:**
   - [ ] Integrate `socket.io` in Express server.
-  - [ ] Emit events on `task:created`, `task:updated`, `task:deleted`, `task:moved`.
+  - [ ] Emit events on `task:created`, `task:updated`, `task:deleted`, `notification:new`.
 - **Frontend Tasks:**
   - [ ] Setup `socket.io-client` connection.
   - [ ] Listen to events and update state automatically when teammates make changes.
@@ -96,7 +126,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ### Feature 2.2: Task Comments & Activity History
 - **Status:** ⬜ Planned
-- **Goal:** Keep team discussions and audit logs attached to specific tasks.
+- **Goal:** Keep team discussions and audit logs attached to specific deliverables.
 - **Backend Tasks:**
   - [ ] Create `Comment` model or embed comments in `Task.js`:
     ```js
@@ -130,7 +160,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
   - [x] Proactive deadline checker for tasks due within 24 hours.
   - [x] Notification endpoints: `GET /api/notifications`, `PATCH /api/notifications/:id/read`, `PATCH /api/notifications/read-all`, `DELETE /api/notifications/:id`, `DELETE /api/notifications`.
 - **Frontend Tasks:**
-  - [x] Create `NotificationContext` with live polling and optimistic updates.
+  - [x] Create `NotificationContext` with live background polling and optimistic updates.
   - [x] Interactive `NotificationMenu` flyout popover in Header with unread counter badge.
   - [x] Filter by `All` and `Unread`.
   - [x] Visual vector icons for deadlines, tasks, team, and system events.
@@ -141,23 +171,22 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ## 🗓️ Phase 3: Visual Schedules & Calendar
 
-### Feature 3.1: Interactive Month/Week Calendar Grid
-- **Status:** ⬜ Planned
-- **Goal:** Replace the basic task list in `Calendar.jsx` with a real interactive calendar.
+### Feature 3.1: Interactive Month Calendar Grid
+- **Status:** ✅ Completed
+- **Goal:** Full interactive monthly calendar grid with milestone previews.
 - **Frontend Tasks:**
-  - [ ] Implement monthly and weekly grid view.
-  - [ ] Render task pills on their respective deadline days with priority color coding.
-  - [ ] Click date to add task directly with deadline preset.
-  - [ ] Drag task pill to a different date to reschedule deadline.
+  - [x] Monthly grid view dynamically calculated from real tasks.
+  - [x] Month navigation with previous/next buttons and "Today" jump.
+  - [x] Render task pills on their respective deadline days with type color-coding.
+  - [x] Click task pill to view full deliverable details modal.
 
 ---
 
-### Feature 3.2: Deadline Alerts & Countdown
+### Feature 3.2: Drag-and-Drop Rescheduling
 - **Status:** ⬜ Planned
-- **Goal:** Prevent overdue tasks with clear visual cues.
+- **Goal:** Reschedule deadlines directly on the calendar.
 - **Frontend Tasks:**
-  - [ ] Highlight overdue tasks with an alert badge (`⚠️ Overdue by X days`).
-  - [ ] "Due Today" banner on Dashboard.
+  - [ ] Drag task pill to a different date cell to reschedule deadline with instant API sync.
 
 ---
 
@@ -165,7 +194,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ### Feature 4.1: User Authentication, Google OAuth & Account Linking
 - **Status:** ✅ Completed
-- **Goal:** Secure login/registration with Google OAuth and unified account linking for same Gmail addresses.
+- **Goal:** Secure login/registration with Google OAuth and unified account linking for matching Gmail addresses.
 - **Backend Tasks:**
   - [x] Create `User` model with password hashing (`bcryptjs`) and Google ID support.
   - [x] Google token verification using official `google-auth-library`.
@@ -175,7 +204,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 - **Frontend Tasks:**
   - [x] Integrated `@react-oauth/google` Google Identity Services wrapper.
   - [x] Created `AuthContext` managing global user state, token persistence, and session verification.
-  - [x] Created `/login` page supporting both one-tap Google Sign-In and manual Email/Password.
+  - [x] Created `/login` page supporting both one-tap Google Sign-In and manual Email/Password with 3D book-page flip.
   - [x] Built `ProtectedRoute` routing guard protecting workspace screens.
   - [x] Updated Sidebar with user avatar, name, email, and one-click Sign Out.
 
@@ -185,7 +214,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 - **Status:** ⬜ Planned
 - **Goal:** Separate tasks by client, sprint, or department.
 - **Backend Tasks:**
-  - [ ] Create `Project` model (`name`, `description`, `members`, `owner`).
+  - [ ] Create `Project` / `Workspace` model (`name`, `description`, `members`, `owner`).
   - [ ] Associate tasks with `projectId`.
 - **Frontend Tasks:**
   - [ ] Workspace/Project switcher dropdown in top navigation.
@@ -200,7 +229,7 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 - **Frontend Tasks:**
   - [ ] Completion Rate % donut chart.
   - [ ] Workload balance chart (tasks per team member).
-  - [ ] Upcoming vs Overdue task count cards.
+  - [ ] Upcoming vs Overdue velocity timeline.
 
 ---
 
@@ -221,20 +250,15 @@ A feature-by-feature roadmap for transforming **TeamSync** into a full-fledged, 
 
 ### Feature 7.1: Centralized API Client & Environment Config
 - **Status:** ✅ Completed
-- **Goal:** Eliminate hardcoded `http://localhost:5000` URLs across frontend files.
 - **Frontend Tasks:**
-  - [x] Create `frontend/src/api/client.js` with Axios instance and base URL from `import.meta.env.VITE_API_URL`.
-  - [x] Refactor all pages (`Tasks.jsx`, `Dashboard.jsx`, `Team.jsx`, `Calendar.jsx`) to use `apiClient` & `taskApi` / `teamApi`.
-  - [x] Add `frontend/.env` and `frontend/.env.example`.
+  - [x] Create `frontend/src/api/client.js` with Axios instance, auth interceptor, and env base URL.
+  - [x] Refactor all pages (`Tasks.jsx`, `Dashboard.jsx`, `Team.jsx`, `Calendar.jsx`) to use `apiClient` & `taskApi` / `teamApi` / `notificationApi`.
+  - [x] Configure `.env` and `.env.example` templates.
 
-### Feature 7.2: Professional UI/UX Overhaul
+### Feature 7.2: Professional UI/UX Overhaul & Zero-Emoji Icon System
 - **Status:** ✅ Completed
-- **Goal:** Elevate look and feel to a modern SaaS application with crisp typography, layout, icons, and interactions.
 - **Frontend Tasks:**
-  - [x] Modern SaaS Shell with [Sidebar.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/Sidebar.jsx) and sticky [Header.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/Header.jsx).
-  - [x] Zero-dependency vector SVG icon system in [Icons.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/Icons.jsx).
-  - [x] Redesigned [Dashboard.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/pages/Dashboard.jsx) with welcome banner, live KPI metric cards, upcoming deliverables feed, and team workload summary.
-  - [x] Overhauled [Tasks.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/pages/Tasks.jsx) with real-time search, type filtering pills, relative deadline badges, dynamic assignee dropdown from database, and left-accented cards.
-  - [x] Rebuilt [Calendar.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/pages/Calendar.jsx) as a full interactive monthly calendar grid with month navigation, today jump, deadline badges on date cells, and task preview modal.
-  - [x] Upgraded [Team.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/pages/Team.jsx) with gradient avatar badges, active status indicators, assigned task counts, and instant filter.
-  - [x] Refined [Modal.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/Modal.jsx) with backdrop blur and smooth entrance animations.
+  - [x] Modern SaaS Shell with [Sidebar.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/layout/Sidebar.jsx) and sticky [Header.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/layout/Header.jsx).
+  - [x] Zero-dependency vector SVG icon system in [Icons.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/common/Icons.jsx).
+  - [x] Reusable, responsive [Modal.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/common/Modal.jsx) with fixed header and scrollable body.
+  - [x] Native Tailwind datetime picker with quick preset buttons (`Tomorrow 5 PM`, `In 3 Days`, `Next Week`, `End of Month`).
