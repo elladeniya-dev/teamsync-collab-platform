@@ -90,11 +90,11 @@ const Login = () => {
       <div className="absolute top-1/4 left-1/4 w-72 sm:w-[450px] h-72 sm:h-[450px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-[450px] h-72 sm:h-[450px] bg-violet-600/15 rounded-full blur-[100px] pointer-events-none"></div>
 
-      {/* Main Glassmorphic Card Container */}
-      <div className="relative z-10 w-full max-w-md lg:max-w-4xl xl:max-w-5xl bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-auto">
+      {/* Main Glassmorphic Card Container - Locked Height on Desktop */}
+      <div className="relative z-10 w-full max-w-md lg:max-w-4xl xl:max-w-5xl bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-auto lg:h-[610px]">
         
-        {/* ================= LEFT SIDE: SHOWCASE (Visible on Desktop / Tablets) ================= */}
-        <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950 p-6 xl:p-8 flex-col justify-between border-r border-slate-800/70 relative">
+        {/* ================= LEFT SIDE: SHOWCASE ================= */}
+        <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950 p-6 xl:p-8 flex-col justify-between border-r border-slate-800/70 h-full">
           <div>
             {/* Brand Logo */}
             <div className="flex items-center gap-3 mb-6">
@@ -155,7 +155,7 @@ const Login = () => {
           </div>
 
           {/* Bottom Security Badge */}
-          <div className="mt-6 pt-4 border-t border-slate-800/80">
+          <div className="pt-4 border-t border-slate-800/80">
             <div className="flex items-center gap-1.5 text-indigo-400 text-xs font-medium mb-1">
               <SparklesIcon className="w-3.5 h-3.5" />
               <span>Enterprise Grade Security</span>
@@ -167,10 +167,10 @@ const Login = () => {
         </div>
 
         {/* ================= RIGHT SIDE: 3D BOOK-FLIPPING AUTH CARD ================= */}
-        <div className="lg:col-span-7 p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+        <div className="lg:col-span-7 p-4 sm:p-6 lg:p-7 flex flex-col justify-between h-full">
           
-          {/* Mobile Brand Header (only visible on mobile/tablets when left panel is hidden) */}
-          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-4">
+          {/* Mobile Brand Header */}
+          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-2 shrink-0">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md">
               <LayersIcon className="w-4 h-4 text-white" />
             </div>
@@ -183,7 +183,7 @@ const Login = () => {
           </div>
 
           {/* Top Segmented Book Tab Switcher */}
-          <div className="max-w-xs sm:max-w-sm mx-auto w-full mb-4">
+          <div className="max-w-xs sm:max-w-sm mx-auto w-full mb-3 shrink-0">
             <div className="bg-slate-950/80 p-1 rounded-xl sm:rounded-2xl border border-slate-800 flex items-center relative">
               <button
                 type="button"
@@ -191,7 +191,7 @@ const Login = () => {
                   setIsRegister(false);
                   setError('');
                 }}
-                className={`flex-1 py-1.5 sm:py-2 text-xs font-semibold rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   !isRegister
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200'
@@ -207,7 +207,7 @@ const Login = () => {
                   setIsRegister(true);
                   setError('');
                 }}
-                className={`flex-1 py-1.5 sm:py-2 text-xs font-semibold rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   isRegister
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200'
@@ -219,21 +219,21 @@ const Login = () => {
             </div>
           </div>
 
-          {/* 3D Book Page Flip Perspective Container */}
-          <div className="perspective-1400 w-full max-w-sm sm:max-w-md mx-auto">
+          {/* 3D Book Page Flip Perspective Container - LOCKED FIXED HEIGHT */}
+          <div className="perspective-1400 w-full max-w-sm sm:max-w-md mx-auto relative flex-1 min-h-[460px] sm:min-h-[475px] max-h-[485px]">
             <div
-              className={`preserve-3d book-card-transition relative w-full ${
+              className={`preserve-3d book-card-transition absolute inset-0 w-full h-full ${
                 isRegister ? 'rotate-y-180' : ''
               }`}
             >
               
-              {/* ================= FRONT FACE: SIGN IN ================= */}
+              {/* ================= FRONT FACE: SIGN IN (LOCKED IDENTICAL HEIGHT) ================= */}
               <div
-                className={`backface-hidden w-full bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col justify-between transition-opacity duration-300 ${
-                  isRegister ? 'pointer-events-none opacity-0 absolute inset-0' : 'relative opacity-100'
+                className={`absolute inset-0 w-full h-full backface-hidden bg-slate-900/95 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col justify-between transition-opacity duration-200 ${
+                  isRegister ? 'pointer-events-none opacity-0' : 'opacity-100'
                 }`}
               >
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3">
                   <div>
                     <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">Welcome back</h3>
                     <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">Sign in to resume your team deliverables</p>
@@ -249,7 +249,7 @@ const Login = () => {
 
                   {/* Google OAuth Button */}
                   <div className="flex justify-center w-full pt-1">
-                    <div className="w-full max-w-[320px] sm:max-w-[360px] flex justify-center">
+                    <div className="w-full max-w-[300px] sm:max-w-[340px] flex justify-center">
                       <GoogleLogin
                         onSuccess={handleGoogleSuccess}
                         onError={handleGoogleError}
@@ -263,8 +263,8 @@ const Login = () => {
                     </div>
                   </div>
 
-                  {/* Divider with guaranteed whitespace-nowrap */}
-                  <div className="relative flex items-center justify-center my-2 sm:my-3">
+                  {/* Divider */}
+                  <div className="relative flex items-center justify-center my-2">
                     <div className="border-t border-slate-800 w-full"></div>
                     <span className="bg-slate-900 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap shrink-0">
                       or continue with email
@@ -316,13 +316,12 @@ const Login = () => {
                     </div>
 
                     {/* 3D Flipping Book Action Button */}
-                    <div className="flip-btn-box w-full h-10 sm:h-11 mt-3">
+                    <div className="flip-btn-box w-full h-10 mt-3">
                       <button
                         type="submit"
                         disabled={submitting}
                         className="flip-btn-cube w-full h-full relative cursor-pointer"
                       >
-                        {/* Front Face */}
                         <div className="flip-face-front absolute inset-0 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 border border-indigo-400/30">
                           {submitting ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -334,7 +333,6 @@ const Login = () => {
                           )}
                         </div>
 
-                        {/* Back Face (Hover 3D Flip) */}
                         <div className="flip-face-back absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-600/40 flex items-center justify-center gap-2 border border-violet-400/40">
                           <span>Turn Page & Enter</span>
                           <LockIcon className="w-4 h-4 text-violet-200" />
@@ -345,7 +343,7 @@ const Login = () => {
                 </div>
 
                 {/* Bottom switcher trigger */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80 text-center text-xs text-slate-400">
+                <div className="pt-2 border-t border-slate-800/80 text-center text-xs text-slate-400">
                   New collaborator?{' '}
                   <button
                     type="button"
@@ -360,13 +358,13 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* ================= BACK FACE: REGISTER / CREATE ACCOUNT ================= */}
+              {/* ================= BACK FACE: REGISTER (LOCKED IDENTICAL HEIGHT) ================= */}
               <div
-                className={`backface-hidden rotate-y-180 w-full bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col justify-between transition-opacity duration-300 ${
-                  !isRegister ? 'pointer-events-none opacity-0 absolute inset-0' : 'relative opacity-100'
+                className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-slate-900/95 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col justify-between transition-opacity duration-200 ${
+                  !isRegister ? 'pointer-events-none opacity-0' : 'opacity-100'
                 }`}
               >
-                <div className="space-y-3 sm:space-y-3.5">
+                <div className="space-y-2.5 sm:space-y-3">
                   <div>
                     <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">Create Workspace Account</h3>
                     <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">Get started with your deliverables in seconds</p>
@@ -374,15 +372,15 @@ const Login = () => {
 
                   {/* Error Notification */}
                   {isRegister && error && (
-                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-2 animate-fadeIn">
+                    <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-2 animate-fadeIn">
                       <AlertCircleIcon className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                       <span className="leading-relaxed">{error}</span>
                     </div>
                   )}
 
                   {/* Google OAuth Button */}
-                  <div className="flex justify-center w-full pt-1">
-                    <div className="w-full max-w-[320px] sm:max-w-[360px] flex justify-center">
+                  <div className="flex justify-center w-full pt-0.5">
+                    <div className="w-full max-w-[300px] sm:max-w-[340px] flex justify-center">
                       <GoogleLogin
                         onSuccess={handleGoogleSuccess}
                         onError={handleGoogleError}
@@ -396,8 +394,8 @@ const Login = () => {
                     </div>
                   </div>
 
-                  {/* Divider with guaranteed whitespace-nowrap */}
-                  <div className="relative flex items-center justify-center my-2 sm:my-3">
+                  {/* Divider */}
+                  <div className="relative flex items-center justify-center my-1.5">
                     <div className="border-t border-slate-800 w-full"></div>
                     <span className="bg-slate-900 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap shrink-0">
                       or sign up with email
@@ -406,7 +404,7 @@ const Login = () => {
                   </div>
 
                   {/* Form */}
-                  <form onSubmit={handleManualSubmit} className="space-y-2.5 sm:space-y-3">
+                  <form onSubmit={handleManualSubmit} className="space-y-2.5">
                     <div>
                       <label className="block text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         Full Name
@@ -416,7 +414,7 @@ const Login = () => {
                         <input
                           type="text"
                           placeholder="Alex Morgan"
-                          className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                          className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           required={isRegister}
@@ -433,7 +431,7 @@ const Login = () => {
                         <input
                           type="email"
                           placeholder="name@company.com"
-                          className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                          className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required={isRegister}
@@ -450,7 +448,7 @@ const Login = () => {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           placeholder="••••••••"
-                          className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                          className="w-full pl-9 pr-9 py-1.5 sm:py-2 text-xs sm:text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required={isRegister}
@@ -466,13 +464,12 @@ const Login = () => {
                     </div>
 
                     {/* 3D Flipping Book Action Button */}
-                    <div className="flip-btn-box w-full h-10 sm:h-11 mt-3">
+                    <div className="flip-btn-box w-full h-10 mt-2.5">
                       <button
                         type="submit"
                         disabled={submitting}
                         className="flip-btn-cube w-full h-full relative cursor-pointer"
                       >
-                        {/* Front Face */}
                         <div className="flip-face-front absolute inset-0 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 border border-indigo-400/30">
                           {submitting ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -484,7 +481,6 @@ const Login = () => {
                           )}
                         </div>
 
-                        {/* Back Face */}
                         <div className="flip-face-back absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg shadow-purple-600/40 flex items-center justify-center gap-2 border border-violet-400/40">
                           <span>Launch New Workspace</span>
                           <SparklesIcon className="w-4 h-4 text-violet-200" />
@@ -495,7 +491,7 @@ const Login = () => {
                 </div>
 
                 {/* Bottom switcher trigger */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80 text-center text-xs text-slate-400">
+                <div className="pt-2 border-t border-slate-800/80 text-center text-xs text-slate-400">
                   Already have an account?{' '}
                   <button
                     type="button"
@@ -514,7 +510,7 @@ const Login = () => {
           </div>
 
           {/* Unified Account Callout */}
-          <div className="max-w-xs sm:max-w-md mx-auto w-full mt-3 p-2 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-center gap-1.5 text-center">
+          <div className="max-w-xs sm:max-w-md mx-auto w-full p-2 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-center gap-1.5 text-center shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
             <span>Same Gmail address? Google & email logins sync to the same profile.</span>
           </div>
