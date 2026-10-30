@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { generateToken } from '../utils/generateToken.js';
 import { recordAuditLog } from './auditService.js';
 import { normalizeRole } from '../middlewares/rbacMiddleware.js';
+import { syncUsersWithTeamMembers } from './teamService.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -77,6 +78,9 @@ export const googleAuthService = async (credential) => {
     status: 'SUCCESS',
   });
 
+  // Ensure user is synchronized into TeamMember collection
+  await syncUsersWithTeamMembers();
+
   return {
     user: {
       _id: user._id,
@@ -119,6 +123,9 @@ export const registerUserService = async ({ name, email, password }) => {
     details: { method: 'Local Email/Password', email: user.email },
     status: 'SUCCESS',
   });
+
+  // Ensure user is synchronized into TeamMember collection
+  await syncUsersWithTeamMembers();
 
   return {
     user: {

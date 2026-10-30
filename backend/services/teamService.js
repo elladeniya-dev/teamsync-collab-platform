@@ -1,10 +1,59 @@
 import TeamMember from '../models/TeamMember.js';
+import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 import { broadcastEvent } from '../socket/socketManager.js';
 import { recordAuditLog } from './auditService.js';
 
+/**
+ * Automatically reconciles registered User accounts into the TeamMember collection
+ * so all authenticated workspace users appear in Team Directory and Task Assignee dropdowns.
+ */
+export const syncUsersWithTeamMembers = async () => {
+  try {
+    const users = await User.find();
+    for (const u of users) {
+      if (!u.email) continue;
+      const normalizedEmail = u.email.toLowerCase().trim();
+      const existing = await TeamMember.findOne({ email: normalizedEmail });
+
+      if (!existing) {
+        let teamRole = 'Fullstack Engineer';
+        const lowerRole = (u.role || '').toLowerCase();
+        if (lowerRole === 'owner' || lowerRole === 'admin') {
+          teamRole = 'Project Lead';
+        } else if (lowerRole === 'guest') {
+          teamRole = 'QA Specialist';
+        }
+
+        const newMember = await TeamMember.create({
+          name: u.name || normalizedEmail.split('@')[0],
+          email: normalizedEmail,
+          role: teamRole,
+          status: 'Active',
+          avatar: u.avatar || '',
+        });
+
+        broadcastEvent('team:created', newMember);
+      } else {
+        let updated = false;
+        if (u.avatar && !existing.avatar) {
+          existing.avatar = u.avatar;
+          updated = true;
+        }
+        if (updated) {
+          await existing.save();
+          broadcastEvent('team:updated', existing);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Could not sync users with team directory:', err.message);
+  }
+};
+
 export const getAllMembers = async () => {
+  await syncUsersWithTeamMembers();
   return await TeamMember.find().sort({ createdAt: -1 });
 };
 

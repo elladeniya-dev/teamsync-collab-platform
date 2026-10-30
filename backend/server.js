@@ -13,6 +13,10 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
 
+  // Reconcile registered users into TeamMember collection
+  const { syncUsersWithTeamMembers } = await import('./services/teamService.js');
+  await syncUsersWithTeamMembers();
+
   // Create HTTP Server & initialize Socket.io
   const httpServer = http.createServer(app);
   initSocket(httpServer);

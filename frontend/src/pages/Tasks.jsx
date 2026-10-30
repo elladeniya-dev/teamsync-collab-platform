@@ -120,13 +120,39 @@ const Tasks = () => {
     }
   };
 
+  // Combined list of team members ensuring current user is always included
+  const availableAssignees = useMemo(() => {
+    const list = [...teamMembers];
+    if (
+      user?.name &&
+      !list.some(
+        (m) =>
+          m.name?.toLowerCase() === user.name.toLowerCase() ||
+          (user.email && m.email?.toLowerCase() === user.email.toLowerCase())
+      )
+    ) {
+      list.unshift({
+        _id: user._id || 'self-assignee',
+        name: user.name,
+        email: user.email,
+        role: user.role === 'Owner' || user.role === 'Admin' ? 'Project Lead' : 'Fullstack Engineer',
+        status: 'Active',
+      });
+    }
+    return list;
+  }, [teamMembers, user]);
+
   const handleOpenAdd = () => {
     setIsEditing(false);
     setEditTaskId(null);
+    const defaultAssignee = availableAssignees.some((m) => m.name === user?.name)
+      ? user?.name
+      : (availableAssignees[0]?.name || '');
+
     setTaskForm({
       title: '',
       description: '',
-      assignee: teamMembers.length > 0 ? teamMembers[0].name : '',
+      assignee: defaultAssignee,
       deadline: dayjs().add(1, 'day').hour(17).minute(0),
       type: 'Review',
       status: 'In Progress',
@@ -521,7 +547,7 @@ const Tasks = () => {
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                 Assignee *
               </label>
-              {teamMembers.length > 0 ? (
+              {availableAssignees.length > 0 ? (
                 <select
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                   value={taskForm.assignee}
@@ -529,9 +555,9 @@ const Tasks = () => {
                   required
                 >
                   <option value="">Select a team member</option>
-                  {teamMembers.map((m) => (
+                  {availableAssignees.map((m) => (
                     <option key={m._id} value={m.name}>
-                      {m.name} — {m.role || 'Fullstack Engineer'} ({m.status || 'Active'})
+                      {m.name} — {m.role || 'Fullstack Engineer'} ({m.status || 'Active'}){m.name === user?.name || (user?.email && m.email === user.email) ? ' (You)' : ''}
                     </option>
                   ))}
                 </select>

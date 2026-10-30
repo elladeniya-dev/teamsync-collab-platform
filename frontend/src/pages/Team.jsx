@@ -437,9 +437,16 @@ const Team = () => {
                       {member.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-base font-bold text-slate-900 leading-snug truncate" title={member.name}>
-                        {member.name}
-                      </h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-base font-bold text-slate-900 leading-snug truncate" title={member.name}>
+                          {member.name}
+                        </h4>
+                        {(member.email === user?.email || member.name === user?.name) && (
+                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md">
+                            You
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-indigo-600 font-medium truncate" title={member.role || 'Fullstack Engineer'}>
                         {member.role || 'Fullstack Engineer'}
                       </p>
