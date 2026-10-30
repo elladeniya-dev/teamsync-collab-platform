@@ -229,9 +229,19 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                         {sp}
                       </option>
                     ))}
-                    <option value={`Sprint ${(activeWorkspace.sprints?.length || 2) + 1}`}>
-                      + Advance to Sprint {(activeWorkspace.sprints?.length || 2) + 1}
-                    </option>
+                    {(() => {
+                      const sprintNumbers = (activeWorkspace.sprints || []).map((s) => {
+                        const match = String(s).match(/Sprint\s+(\d+)/i);
+                        return match ? parseInt(match[1], 10) : 0;
+                      });
+                      const maxSprintNum = Math.max(0, ...sprintNumbers);
+                      const nextSprintNum = maxSprintNum > 0 ? maxSprintNum + 1 : 2;
+                      return (
+                        <option value={`Sprint ${nextSprintNum}`}>
+                          + Advance to Sprint {nextSprintNum}
+                        </option>
+                      );
+                    })()}
                   </select>
                 </div>
               )}
