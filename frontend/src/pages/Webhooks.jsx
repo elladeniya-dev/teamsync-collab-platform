@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { webhookApi, taskApi } from '../api/client';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import { useDemoMode } from '../context/DemoModeContext';
 import {
   WebhookIcon,
   GitPullRequestIcon,
@@ -15,12 +16,14 @@ import {
   PlayIcon,
   LockIcon,
   ExternalLinkIcon,
-  XIcon
+  XIcon,
+  PlugIcon
 } from '../components/common/Icons';
 
 const Webhooks = () => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
+  const { isTestHarnessPlugged, plugTestHarness, unplugTestHarness } = useDemoMode();
 
   const [deliveries, setDeliveries] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -347,27 +350,80 @@ const Webhooks = () => {
         </div>
       </div>
 
-      {/* Two Column Layout: Webhook Setup + Interactive Simulator */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Webhook Setup Card (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+      {/* Plug/Unplug State Banners */}
+      {!isTestHarnessPlugged ? (
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <div>
+              <strong className="text-slate-900 font-semibold">Production Inbound Gateway Ready:</strong>
+              <span className="ml-1 text-slate-500">
+                Listening for cryptographically authenticated GitHub events at <code className="font-mono text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded border border-indigo-200">/api/webhooks/github</code>. Test harnesses are unplugged.
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={plugTestHarness}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold border border-purple-200 transition cursor-pointer shrink-0"
+            title="Plug in test simulator for live demonstration"
+          >
+            <PlugIcon className="w-3.5 h-3.5 text-purple-600" />
+            <span>Plug In Test Simulator</span>
+          </button>
+        </div>
+      ) : (
+        <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-950 animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <PlugIcon className="w-4 h-4 text-purple-700 shrink-0 animate-pulse" />
+            <div>
+              <strong className="font-semibold">Developer Test Harness Plugged In:</strong>
+              <span className="ml-1 text-purple-800">
+                Interactive simulator active. Dispatch cryptographically signed merge payloads to test automated task transitions without pushing to GitHub.
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={unplugTestHarness}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-purple-100/60 text-purple-700 font-semibold border border-purple-300 transition cursor-pointer shrink-0"
+            title="Unplug testing harness to return to pure production mode"
+          >
+            <XIcon className="w-3.5 h-3.5" />
+            <span>Unplug Test Harness</span>
+          </button>
+        </div>
+      )}
+
+      {/* Webhook Configuration & Simulator: Responsive Plug / Unplug State */}
+      {!isTestHarnessPlugged ? (
+        /* Pure Production Deploy-Ready Card (Full Width) */
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-5 animate-fadeIn">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <ShieldCheckIcon className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                  GitHub Webhook Setup
+                  Production Webhook Setup
                 </h3>
-                <p className="text-[11px] text-slate-400">Connect your repository in seconds</p>
+                <p className="text-[11px] text-slate-400">Configure GitHub repository webhooks for automated task transitions</p>
               </div>
             </div>
+            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
+              Deploy Ready
+            </span>
+          </div>
 
-            <div className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Left: Endpoint URL & Secret Key */}
+            <div className="space-y-4 text-xs">
               <div>
                 <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Payload URL (Target)
+                  Payload URL (Inbound Target)
                 </label>
                 <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono text-[11px] text-indigo-700">
                   <span className="truncate flex-1 select-all">{webhookEndpointUrl}</span>
@@ -409,166 +465,254 @@ const Webhooks = () => {
                 </div>
                 {copiedSecret && <span className="text-[10px] text-emerald-600 font-medium mt-1 block">Secret copied</span>}
               </div>
+            </div>
 
-              <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-1.5 text-xs text-indigo-950">
-                <strong className="block font-semibold">How Automatic Transitions Work:</strong>
-                <ol className="list-decimal list-inside space-y-1 text-indigo-900/80 leading-relaxed text-[11px]">
-                  <li>Set GitHub webhook content type to <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">application/json</code>.</li>
-                  <li>Enable the <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">Pull requests</code> event trigger.</li>
-                  <li>When a PR merges with <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">closes #&lt;taskId&gt;</code> or matching task title, TeamSync instantly transitions the deliverable to <span className="text-emerald-700 font-bold">Done</span>.</li>
-                </ol>
-              </div>
+            {/* Right: Step-by-Step Instructions */}
+            <div className="p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-2 text-xs text-slate-700">
+              <strong className="block font-semibold text-slate-900">GitHub Repository Configuration Guide:</strong>
+              <ol className="list-decimal list-inside space-y-1.5 text-slate-600 leading-relaxed text-[11px]">
+                <li>In your GitHub repo, navigate to <strong className="text-slate-800">Settings &rarr; Webhooks &rarr; Add webhook</strong>.</li>
+                <li>Paste the <strong className="text-slate-800">Payload URL</strong> and set Content type to <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">application/json</code>.</li>
+                <li>Paste the <strong className="text-slate-800">Secret Key</strong> into the Secret field.</li>
+                <li>Under event triggers, select <strong className="text-slate-800">Pull requests</strong>.</li>
+                <li>When a pull request merges with <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">closes #&lt;taskId&gt;</code>, TeamSync transitions the deliverable to <span className="text-emerald-700 font-bold">Done</span>.</li>
+              </ol>
             </div>
           </div>
         </div>
-
-        {/* Right Column: Interactive Webhook Simulator (7 cols) */}
-        <div className="lg:col-span-7">
-          <form
-            onSubmit={handleRunSimulation}
-            className="bg-white p-6 rounded-2xl border border-indigo-200/80 shadow-sm space-y-4"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
+      ) : (
+        /* Pluggable Test Harness Layout (Setup on Left, Simulator on Right) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
+          {/* Left Column: Webhook Setup Card (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <GitPullRequestIcon className="w-4 h-4" />
+                  <ShieldCheckIcon className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                    Interactive Webhook Simulator (Recruiter Demo)
+                    GitHub Webhook Setup
                   </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Dispatch an authentic, cryptographically signed GitHub PR merge payload into the live engine.
-                  </p>
+                  <p className="text-[11px] text-slate-400">Connect your repository in seconds</p>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Target Deliverable *
-                </label>
-                <select
-                  value={simTask}
-                  onChange={(e) => handleSelectTask(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
-                >
-                  <option value="">-- Choose Task --</option>
-                  {tasks.map((t) => (
-                    <option key={t._id} value={t._id}>
-                      {t.title} [{t.status || 'In Progress'}]
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  PR Number
-                </label>
-                <input
-                  type="number"
-                  value={simPrNumber}
-                  onChange={(e) => setSimPrNumber(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
-                  placeholder="e.g. 42"
-                  required
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  GitHub Pull Request Title *
-                </label>
-                <input
-                  type="text"
-                  value={simPrTitle}
-                  onChange={(e) => setSimPrTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
-                  placeholder="e.g. feat: complete task closes #64a..."
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  GitHub Author
-                </label>
-                <input
-                  type="text"
-                  value={simAuthor}
-                  onChange={(e) => setSimAuthor(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
-                />
-              </div>
-
-              {/* Idempotency Demonstration Checkbox */}
-              <div className="flex items-center pt-5">
-                <label className="flex items-center gap-2 cursor-pointer text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={simUseDuplicateId}
-                    onChange={(e) => setSimUseDuplicateId(e.target.checked)}
-                    disabled={!lastSimDeliveryId}
-                    className="w-4 h-4 rounded text-indigo-600 bg-slate-50 border-slate-300 focus:ring-indigo-500 cursor-pointer disabled:opacity-40"
-                  />
-                  <span className="text-[11px]">
-                    Re-use previous Delivery ID <strong className="text-purple-700 font-semibold">(Test Idempotency)</strong>
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-              <span className="text-[11px] text-slate-400 font-mono">
-                {lastSimDeliveryId ? `Last ID: ${lastSimDeliveryId}` : 'Generates unique delivery GUID'}
-              </span>
-
-              <button
-                type="submit"
-                disabled={simulating}
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
-              >
-                <PlayIcon className="w-3.5 h-3.5 fill-current" />
-                <span>{simulating ? 'Signing & Dispatching...' : 'Dispatch Signed Webhook'}</span>
-              </button>
-            </div>
-
-            {/* Simulation Response Live Feedback */}
-            {simulationResult && (
-              <div className="p-4 rounded-xl bg-slate-900 text-slate-200 space-y-2 font-mono text-[11px] animate-fadeIn shadow-md">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400 text-xs">HTTP Status:</span>
-                  <span
-                    className={`font-bold ${
-                      simulationResult.idempotent
-                        ? 'text-purple-400'
-                        : simulationResult.transitioned
-                        ? 'text-emerald-400'
-                        : 'text-amber-400'
-                    }`}
-                  >
-                    {simulationResult.idempotent
-                      ? '200 OK (Idempotent: Duplicate Detected)'
-                      : simulationResult.transitioned
-                      ? '200 OK (Task Moved to Done)'
-                      : '200 OK (Ignored)'}
-                  </span>
-                </div>
-                <div className="text-slate-300 leading-relaxed">
-                  {simulationResult.summary || simulationResult.message}
-                </div>
-                {simulationResult.signature && (
-                  <div className="text-[10px] text-slate-400 truncate" title={simulationResult.signature}>
-                    HMAC-SHA256: {simulationResult.signature}
+              <div className="space-y-3.5 text-xs">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                    Payload URL (Target)
+                  </label>
+                  <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono text-[11px] text-indigo-700">
+                    <span className="truncate flex-1 select-all">{webhookEndpointUrl}</span>
+                    <button
+                      onClick={() => handleCopy(webhookEndpointUrl, 'url')}
+                      className="p-1 hover:text-indigo-800 text-slate-400 transition cursor-pointer shrink-0"
+                      title="Copy Payload URL"
+                    >
+                      <CopyIcon className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
+                  {copiedUrl && <span className="text-[10px] text-emerald-600 font-medium mt-1 block">Copied to clipboard</span>}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                      Secret Key (HMAC SHA-256)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="text-[10px] text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer"
+                    >
+                      {showSecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono text-[11px] text-purple-700">
+                    <span className="truncate flex-1">
+                      {showSecret ? webhookSecret : '••••••••••••••••••••••••••••••••'}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(webhookSecret, 'secret')}
+                      className="p-1 hover:text-purple-800 text-slate-400 transition cursor-pointer shrink-0"
+                      title="Copy Secret"
+                    >
+                      <CopyIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {copiedSecret && <span className="text-[10px] text-emerald-600 font-medium mt-1 block">Secret copied</span>}
+                </div>
+
+                <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-1.5 text-xs text-indigo-950">
+                  <strong className="block font-semibold">How Automatic Transitions Work:</strong>
+                  <ol className="list-decimal list-inside space-y-1 text-indigo-900/80 leading-relaxed text-[11px]">
+                    <li>Set GitHub webhook content type to <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">application/json</code>.</li>
+                    <li>Enable the <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">Pull requests</code> event trigger.</li>
+                    <li>When a PR merges with <code className="font-semibold text-indigo-700 bg-white px-1 py-0.5 rounded border border-indigo-200">closes #&lt;taskId&gt;</code> or matching task title, TeamSync instantly transitions the deliverable to <span className="text-emerald-700 font-bold">Done</span>.</li>
+                  </ol>
+                </div>
               </div>
-            )}
-          </form>
+            </div>
+          </div>
+
+          {/* Right Column: Interactive Webhook Simulator (7 cols) */}
+          <div className="lg:col-span-7">
+            <form
+              onSubmit={handleRunSimulation}
+              className="bg-white p-6 rounded-2xl border border-purple-200 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <GitPullRequestIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                      Interactive Webhook Simulator (Sandbox)
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Dispatch an authentic, cryptographically signed GitHub PR merge payload into the live engine.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={unplugTestHarness}
+                  className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                  title="Unplug Simulator"
+                >
+                  Unplug
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                    Target Deliverable *
+                  </label>
+                  <select
+                    value={simTask}
+                    onChange={(e) => handleSelectTask(e.target.value)}
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                  >
+                    <option value="">-- Choose Task --</option>
+                    {tasks.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.title} [{t.status || 'In Progress'}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                    PR Number
+                  </label>
+                  <input
+                    type="number"
+                    value={simPrNumber}
+                    onChange={(e) => setSimPrNumber(e.target.value)}
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
+                    placeholder="e.g. 42"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                    GitHub Pull Request Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={simPrTitle}
+                    onChange={(e) => setSimPrTitle(e.target.value)}
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
+                    placeholder="e.g. feat: complete task closes #64a..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                    GitHub Author
+                  </label>
+                  <input
+                    type="text"
+                    value={simAuthor}
+                    onChange={(e) => setSimAuthor(e.target.value)}
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-mono"
+                  />
+                </div>
+
+                {/* Idempotency Demonstration Checkbox */}
+                <div className="flex items-center pt-5">
+                  <label className="flex items-center gap-2 cursor-pointer text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={simUseDuplicateId}
+                      onChange={(e) => setSimUseDuplicateId(e.target.checked)}
+                      disabled={!lastSimDeliveryId}
+                      className="w-4 h-4 rounded text-purple-600 bg-slate-50 border-slate-300 focus:ring-purple-500 cursor-pointer disabled:opacity-40"
+                    />
+                    <span className="text-[11px]">
+                      Re-use previous Delivery ID <strong className="text-purple-700 font-semibold">(Test Idempotency)</strong>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {lastSimDeliveryId ? `Last ID: ${lastSimDeliveryId}` : 'Generates unique delivery GUID'}
+                </span>
+
+                <button
+                  type="submit"
+                  disabled={simulating}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-purple-600/20 transition cursor-pointer disabled:opacity-50"
+                >
+                  <PlayIcon className="w-3.5 h-3.5 fill-current" />
+                  <span>{simulating ? 'Signing & Dispatching...' : 'Dispatch Signed Webhook'}</span>
+                </button>
+              </div>
+
+              {/* Simulation Response Live Feedback */}
+              {simulationResult && (
+                <div className="p-4 rounded-xl bg-slate-900 text-slate-200 space-y-2 font-mono text-[11px] animate-fadeIn shadow-md">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-slate-400 text-xs">HTTP Status:</span>
+                    <span
+                      className={`font-bold ${
+                        simulationResult.idempotent
+                          ? 'text-purple-400'
+                          : simulationResult.transitioned
+                          ? 'text-emerald-400'
+                          : 'text-amber-400'
+                      }`}
+                    >
+                      {simulationResult.idempotent
+                        ? '200 OK (Idempotent: Duplicate Detected)'
+                        : simulationResult.transitioned
+                        ? '200 OK (Task Moved to Done)'
+                        : '200 OK (Ignored)'}
+                    </span>
+                  </div>
+                  <div className="text-slate-300 leading-relaxed">
+                    {simulationResult.summary || simulationResult.message}
+                  </div>
+                  {simulationResult.signature && (
+                    <div className="text-[10px] text-slate-400 truncate" title={simulationResult.signature}>
+                      HMAC-SHA256: {simulationResult.signature}
+                    </div>
+                  )}
+                </div>
+              )}
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Filter and Delivery History Table */}
       <div className="space-y-4">

@@ -52,6 +52,11 @@ export const getWebhookStats = asyncHandler(async (req, res) => {
  * Access: Private (Owner, Admin, Member)
  */
 export const simulateWebhook = asyncHandler(async (req, res) => {
+  // If demo mode is explicitly disabled (e.g. in strict production deployment), reject simulator execution
+  if (process.env.ENABLE_DEMO_MODE === 'false') {
+    throw new ApiError(403, 'Simulation test harness is unplugged (Production Deploy Mode active).');
+  }
+
   const { taskId, prTitle, prNumber, githubAuthor, deliveryId } = req.body;
 
   const result = await webhookService.simulateGitHubPRMerge({

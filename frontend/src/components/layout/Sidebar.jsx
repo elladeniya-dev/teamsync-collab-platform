@@ -15,9 +15,11 @@ import {
 } from '../common/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { useDemoMode } from '../../context/DemoModeContext';
 
 const Sidebar = ({ isOpen = false, onClose }) => {
   const { user, logout, changeUserRole } = useAuth();
+  const { isTestHarnessPlugged } = useDemoMode();
   const { 
     workspaces, 
     activeWorkspace, 
@@ -398,16 +400,25 @@ const Sidebar = ({ isOpen = false, onClose }) => {
             <div className="overflow-hidden min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">{user?.name || 'Workspace User'}</p>
               
-              {/* Clickable Role Pill to Toggle Switcher */}
-              <button
-                type="button"
-                onClick={() => setIsRoleMenuOpen(!isRoleMenuOpen)}
-                className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 transition cursor-pointer"
-                title="Click to switch workspace role for testing"
-              >
-                <span>{user?.role || 'Member'}</span>
-                <span className="text-[8px] text-indigo-400">▾</span>
-              </button>
+              {/* Role Display: Pluggable Demo Switcher or Clean Production Badge */}
+              {isTestHarnessPlugged ? (
+                <button
+                  type="button"
+                  onClick={() => setIsRoleMenuOpen(!isRoleMenuOpen)}
+                  className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30 transition cursor-pointer"
+                  title="Test Harness Active: Click to switch workspace role for testing"
+                >
+                  <span>{user?.role || 'Member'}</span>
+                  <span className="text-[8px] text-purple-400">▾</span>
+                </button>
+              ) : (
+                <span
+                  className="mt-0.5 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 select-none"
+                  title={`Workspace Role: ${user?.role || 'Member'}`}
+                >
+                  {user?.role || 'Member'}
+                </span>
+              )}
             </div>
           </div>
 
