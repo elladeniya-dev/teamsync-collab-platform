@@ -64,11 +64,27 @@ const Calendar = () => {
   });
 
   const availableAssignees = useMemo(() => {
-    const list = teamMembers.map((m) => m.name).filter(Boolean);
-    if (user?.name && !list.includes(user.name)) {
-      list.unshift(user.name);
+    const list = [...teamMembers];
+    if (
+      user?.name &&
+      !list.some(
+        (m) =>
+          m.name?.toLowerCase() === user.name.toLowerCase() ||
+          (user.email && m.email?.toLowerCase() === user.email.toLowerCase())
+      )
+    ) {
+      list.unshift({
+        _id: user._id || 'self-assignee',
+        name: user.name,
+        email: user.email,
+        role:
+          user.role === 'Owner' || user.role === 'Admin'
+            ? 'Project Lead'
+            : 'Fullstack Engineer',
+        status: 'Active',
+      });
     }
-    return list.length > 0 ? list : ['Unassigned'];
+    return list;
   }, [teamMembers, user]);
 
   const fetchData = useCallback(async () => {

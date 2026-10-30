@@ -255,12 +255,19 @@ const TaskDetailModal = ({
                 disabled={isGuest}
               >
                 <option value="">Select a team member</option>
-                {availableAssignees.map((member) => (
-                  <option key={member._id} value={member.name}>
-                    {member.name} &mdash; {member.role || 'Member'}
-                    {member.status ? ` (${member.status})` : ''}
-                  </option>
-                ))}
+                {availableAssignees.map((member, idx) => {
+                  const isObj = typeof member === 'object' && member !== null;
+                  const name = isObj ? (member.name || '') : String(member);
+                  const role = isObj && member.role ? ` — ${member.role}` : '';
+                  const status = isObj && member.status ? ` (${member.status})` : '';
+                  const key = isObj && member._id ? member._id : `${name}-${idx}`;
+
+                  return (
+                    <option key={key} value={name}>
+                      {name}{role}{status}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
