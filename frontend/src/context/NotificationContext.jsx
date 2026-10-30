@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { notificationApi } from '../api/client';
 import { useAuth } from './AuthContext';
+import { useSocket } from './SocketContext';
 
 const NotificationContext = createContext(null);
 
 export const NotificationProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
+  const { socket } = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  // Initial fetch and auto-refresh interval
+  // Initial fetch and auto-refresh fallback interval
   useEffect(() => {
     if (isAuthenticated) {
       setLoading(true);
@@ -33,7 +35,7 @@ export const NotificationProvider = ({ children }) => {
 
       const interval = setInterval(() => {
         fetchNotifications();
-      }, 25000); // 25s background polling
+      }, 45000); // 45s fallback polling
 
       return () => clearInterval(interval);
     } else {
@@ -41,6 +43,25 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(0);
     }
   }, [isAuthenticated, fetchNotifications]);
+
+  // Instant Real-Time WebSocket Notification Listener
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRemoteNotification = (newNotif) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n._id === newNotif._id)) return prev;
+        return [newNotif, ...prev];
+      });
+      setUnreadCount((prev) => prev + 1);
+    };
+
+    socket.on('notification:new', handleRemoteNotification);
+
+    return () => {
+      socket.off('notification:new', handleRemoteNotification);
+    };
+  }, [socket]);
 
   const markAsRead = async (id) => {
     // Optimistic update

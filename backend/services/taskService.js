@@ -1,6 +1,7 @@
 import Task from '../models/Task.js';
 import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
+import { broadcastEvent } from '../socket/socketManager.js';
 
 export const getAllTasks = async () => {
   return await Task.find().sort({ deadline: 1 });
@@ -17,8 +18,11 @@ export const getTaskById = async (id) => {
 export const createTask = async (taskData) => {
   const task = await Task.create(taskData);
 
+  // Broadcast real-time WebSocket event
+  broadcastEvent('task:created', task);
+
   try {
-    await Notification.create({
+    const notif = await Notification.create({
       title: 'New Task Created',
       message: `"${task.title}" assigned to ${task.assignee || 'team'}.`,
       type: 'task',
@@ -26,6 +30,7 @@ export const createTask = async (taskData) => {
       link: '/tasks',
       metadata: { taskId: task._id.toString() },
     });
+    broadcastEvent('notification:new', notif);
   } catch (notifErr) {
     console.warn('Could not create notification for new task:', notifErr.message);
   }
@@ -42,8 +47,11 @@ export const updateTask = async (id, updateData) => {
     throw new ApiError(404, `Task not found with id: ${id}`);
   }
 
+  // Broadcast real-time WebSocket event
+  broadcastEvent('task:updated', task);
+
   try {
-    await Notification.create({
+    const notif = await Notification.create({
       title: 'Task Deliverable Updated',
       message: `"${task.title}" details were modified.`,
       type: 'task',
@@ -51,6 +59,7 @@ export const updateTask = async (id, updateData) => {
       link: '/tasks',
       metadata: { taskId: task._id.toString() },
     });
+    broadcastEvent('notification:new', notif);
   } catch (notifErr) {
     console.warn('Could not create notification for updated task:', notifErr.message);
   }
@@ -64,14 +73,18 @@ export const deleteTask = async (id) => {
     throw new ApiError(404, `Task not found with id: ${id}`);
   }
 
+  // Broadcast real-time WebSocket event
+  broadcastEvent('task:deleted', { id });
+
   try {
-    await Notification.create({
+    const notif = await Notification.create({
       title: 'Task Deliverable Removed',
       message: `"${task.title}" was removed from the sprint board.`,
       type: 'task',
       priority: 'medium',
       link: '/tasks',
     });
+    broadcastEvent('notification:new', notif);
   } catch (notifErr) {
     console.warn('Could not create notification for deleted task:', notifErr.message);
   }

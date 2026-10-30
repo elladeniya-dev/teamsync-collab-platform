@@ -14,6 +14,7 @@ import {
 import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
 import { getTypeStyle, TASK_TYPES } from '../utils/taskHelpers';
 import dayjs from 'dayjs';
+import { useSocket } from '../context/SocketContext';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -22,6 +23,7 @@ const Tasks = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
+  const { socket, announceViewChange } = useSocket();
   
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +40,50 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    announceViewChange('/tasks');
+  }, [announceViewChange]);
+
+  // Real-time WebSocket Listeners for multi-client synchronization
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRemoteTaskCreated = (newTask) => {
+      setTasks((prev) => {
+        if (prev.some((t) => t._id === newTask._id)) return prev;
+        return [...prev, newTask].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      });
+    };
+
+    const handleRemoteTaskUpdated = (updatedTask) => {
+      setTasks((prev) =>
+        prev
+          .map((t) => (t._id === updatedTask._id ? updatedTask : t))
+          .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+      );
+    };
+
+    const handleRemoteTaskDeleted = ({ id }) => {
+      setTasks((prev) => prev.filter((t) => t._id !== id));
+    };
+
+    const handleRemoteTeamUpdated = (member) => {
+      setTeamMembers((prev) =>
+        prev.map((m) => (m._id === member._id ? member : m))
+      );
+    };
+
+    socket.on('task:created', handleRemoteTaskCreated);
+    socket.on('task:updated', handleRemoteTaskUpdated);
+    socket.on('task:deleted', handleRemoteTaskDeleted);
+    socket.on('team:updated', handleRemoteTeamUpdated);
+
+    return () => {
+      socket.off('task:created', handleRemoteTaskCreated);
+      socket.off('task:updated', handleRemoteTaskUpdated);
+      socket.off('task:deleted', handleRemoteTaskDeleted);
+      socket.off('team:updated', handleRemoteTeamUpdated);
+    };
+  }, [socket]);
 
   const fetchData = async () => {
     try {

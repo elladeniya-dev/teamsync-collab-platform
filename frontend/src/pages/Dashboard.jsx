@@ -13,11 +13,13 @@ import {
 } from '../components';
 import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
 import { getTypeStyle } from '../utils/taskHelpers';
+import { useSocket } from '../context/SocketContext';
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { socket, announceViewChange } = useSocket();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +41,62 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+    announceViewChange('/');
+  }, [announceViewChange]);
+
+  // Real-time synchronization for dashboard KPIs and feeds
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRemoteTaskCreated = (newTask) => {
+      setTasks((prev) => {
+        if (prev.some((t) => t._id === newTask._id)) return prev;
+        return [...prev, newTask].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      });
+    };
+
+    const handleRemoteTaskUpdated = (updatedTask) => {
+      setTasks((prev) =>
+        prev
+          .map((t) => (t._id === updatedTask._id ? updatedTask : t))
+          .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+      );
+    };
+
+    const handleRemoteTaskDeleted = ({ id }) => {
+      setTasks((prev) => prev.filter((t) => t._id !== id));
+    };
+
+    const handleRemoteTeamCreated = (newMember) => {
+      setMembers((prev) => [newMember, ...prev]);
+    };
+
+    const handleRemoteTeamUpdated = (member) => {
+      setMembers((prev) =>
+        prev.map((m) => (m._id === member._id ? member : m))
+      );
+    };
+
+    const handleRemoteTeamDeleted = ({ id }) => {
+      setMembers((prev) => prev.filter((m) => m._id !== id));
+    };
+
+    socket.on('task:created', handleRemoteTaskCreated);
+    socket.on('task:updated', handleRemoteTaskUpdated);
+    socket.on('task:deleted', handleRemoteTaskDeleted);
+    socket.on('team:created', handleRemoteTeamCreated);
+    socket.on('team:updated', handleRemoteTeamUpdated);
+    socket.on('team:deleted', handleRemoteTeamDeleted);
+
+    return () => {
+      socket.off('task:created', handleRemoteTaskCreated);
+      socket.off('task:updated', handleRemoteTaskUpdated);
+      socket.off('task:deleted', handleRemoteTaskDeleted);
+      socket.off('team:created', handleRemoteTeamCreated);
+      socket.off('team:updated', handleRemoteTeamUpdated);
+      socket.off('team:deleted', handleRemoteTeamDeleted);
+    };
+  }, [socket]);
 
   const now = new Date();
   const upcomingTasks = tasks.filter(t => new Date(t.deadline) >= now).slice(0, 5);

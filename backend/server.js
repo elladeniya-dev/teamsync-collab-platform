@@ -1,18 +1,25 @@
+import http from 'http';
 import dotenv from 'dotenv';
 import app from './app.js';
 import { connectDB } from './config/db.js';
+import { initSocket } from './socket/socketManager.js';
 
 // Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database and start server
+// Connect to Database and start server with WebSockets
 const startServer = async () => {
   await connectDB();
 
-  const server = app.listen(PORT, () => {
+  // Create HTTP Server & initialize Socket.io
+  const httpServer = http.createServer(app);
+  initSocket(httpServer);
+
+  const server = httpServer.listen(PORT, () => {
     console.log(`🚀 TeamSync Backend running on http://localhost:${PORT}`);
+    console.log(`⚡ WebSocket Real-Time Sync active on ws://localhost:${PORT}`);
     console.log(`🩺 Health check available at http://localhost:${PORT}/health`);
   });
 
