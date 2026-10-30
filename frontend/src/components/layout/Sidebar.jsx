@@ -12,7 +12,8 @@ import {
   XIcon,
   ShieldIcon,
   LockIcon,
-  WebhookIcon
+  WebhookIcon,
+  TrashIcon,
 } from '../common/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
@@ -32,6 +33,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
 
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isManagingSprints, setIsManagingSprints] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [newSprintName, setNewSprintName] = useState('Sprint 1');
   const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
@@ -53,6 +55,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setIsWorkspaceMenuOpen(false);
         setIsCreatingWorkspace(false);
+        setIsManagingSprints(false);
       }
       if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
         setIsRoleMenuOpen(false);
@@ -90,6 +93,17 @@ const Sidebar = ({ isOpen = false, onClose }) => {
 
   const handleRemoveSprint = async (sprintName) => {
     if (!activeWorkspace) return;
+    if (sprintName === activeWorkspace.currentSprint) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Cycle Currently Active',
+        text: `"${sprintName}" is currently the active sprint for this workspace. Switch to a different sprint first before removing it.`,
+        background: '#0f172a',
+        color: '#f8fafc',
+      });
+      return;
+    }
+
     if ((activeWorkspace.sprints || []).length <= 1) {
       Swal.fire({
         icon: 'info',
@@ -102,13 +116,14 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     }
 
     const confirm = await Swal.fire({
-      title: `Remove "${sprintName}"?`,
-      text: `Are you sure you want to remove ${sprintName} from ${activeWorkspace.name}? Tasks will be preserved.`,
+      title: `Delete "${sprintName}"?`,
+      text: `Are you sure you want to remove "${sprintName}" from ${activeWorkspace.name}? All deliverables and team history will remain safe.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#e11d48',
       cancelButtonColor: '#475569',
-      confirmButtonText: 'Yes, remove',
+      confirmButtonText: 'Yes, delete cycle',
+      cancelButtonText: 'Cancel',
       background: '#0f172a',
       color: '#f8fafc',
     });
@@ -295,47 +310,88 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                     })()}
                   </select>
 
-                  {/* Sprint Cycles Chips with Remove Action */}
-                  <div className="space-y-1">
+                  {/* Sprint Cycles Section with Accidental Deletion Protection */}
+                  <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                        Manage Cycles ({(activeWorkspace.sprints || []).length})
+                        Sprint Cycles ({(activeWorkspace.sprints || []).length})
                       </span>
-                      <span className="text-[9px] text-slate-500">Tap x to delete</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsManagingSprints(!isManagingSprints)}
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded transition cursor-pointer ${
+                          isManagingSprints
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-xs'
+                            : 'text-indigo-400 hover:text-indigo-300 hover:bg-slate-800'
+                        }`}
+                        title={isManagingSprints ? 'Done managing cycles' : 'Manage sprint cycles'}
+                      >
+                        {isManagingSprints ? 'Done' : 'Manage'}
+                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-0.5">
+
+                    {isManagingSprints && (
+                      <div className="flex items-center justify-between text-[10px] bg-slate-900/90 text-slate-400 px-2 py-1 rounded-lg border border-slate-800">
+                        <span className="flex items-center gap-1 text-slate-300">
+                          <LockIcon className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                          <span>Active cycle is protected</span>
+                        </span>
+                        <span className="text-[9px] text-slate-500">Tap trash to delete</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-0.5">
                       {(activeWorkspace.sprints || []).map((sp) => {
                         const isActive = sp === activeWorkspace.currentSprint;
-                        const canDelete = (activeWorkspace.sprints || []).length > 1;
+
+                        // Safe Mode: Pure navigation pills with zero accidental delete risk
+                        if (!isManagingSprints) {
+                          return (
+                            <button
+                              key={sp}
+                              type="button"
+                              onClick={() => handleSprintSelect(sp)}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition cursor-pointer ${
+                                isActive
+                                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs font-semibold'
+                                  : 'bg-slate-900/90 text-slate-300 border-slate-700/60 hover:bg-slate-800 hover:text-white'
+                              }`}
+                              title={isActive ? 'Currently active sprint' : `Switch to ${sp}`}
+                            >
+                              <span>{sp}</span>
+                              {isActive && <CheckIcon className="w-3 h-3 text-white" />}
+                            </button>
+                          );
+                        }
+
+                        // Manage Mode: Explicit, protected removal view
                         return (
                           <div
                             key={sp}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition ${
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border transition ${
                               isActive
-                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
-                                : 'bg-slate-900/90 text-slate-300 border-slate-700/60 hover:bg-slate-800'
+                                ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30'
+                                : 'bg-slate-900 text-slate-300 border-slate-700/70'
                             }`}
                           >
-                            <button
-                              type="button"
-                              onClick={() => handleSprintSelect(sp)}
-                              className="hover:underline cursor-pointer"
-                              title={`Switch to ${sp}`}
-                            >
-                              {sp}
-                            </button>
-                            {canDelete && (
+                            <span>{sp}</span>
+                            {isActive ? (
+                              <span
+                                title="Active sprint is currently in use and cannot be removed"
+                                className="flex items-center gap-0.5 text-[9px] text-indigo-400 bg-indigo-500/10 px-1 py-0.5 rounded border border-indigo-500/20"
+                              >
+                                <LockIcon className="w-2.5 h-2.5" />
+                                <span>In Use</span>
+                              </span>
+                            ) : (
                               <button
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSprint(sp);
-                                }}
-                                className="text-slate-400 hover:text-rose-400 p-0.5 rounded hover:bg-slate-700/60 transition cursor-pointer ml-0.5"
-                                title={`Remove ${sp}`}
-                                aria-label={`Remove ${sp}`}
+                                onClick={() => handleRemoveSprint(sp)}
+                                className="p-1 text-slate-400 hover:text-white hover:bg-rose-600 rounded transition cursor-pointer"
+                                title={`Delete ${sp}`}
+                                aria-label={`Delete ${sp}`}
                               >
-                                <XIcon className="w-3 h-3" />
+                                <TrashIcon className="w-3 h-3 text-rose-400 hover:text-white" />
                               </button>
                             )}
                           </div>
