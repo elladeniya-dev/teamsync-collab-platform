@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { XIcon } from './Icons';
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl" }) => {
@@ -18,9 +19,9 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl" }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
@@ -46,7 +47,8 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl" }) => {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

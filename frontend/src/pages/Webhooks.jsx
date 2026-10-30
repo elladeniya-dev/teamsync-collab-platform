@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { webhookApi, taskApi } from '../api/client';
 import { useSocket } from '../context/SocketContext';
@@ -116,6 +117,21 @@ const Webhooks = () => {
       socket.off('webhook:delivery', handleNewDelivery);
     };
   }, [socket]);
+
+  // Handle Escape key and body scroll lock for inspect modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedDelivery(null);
+    };
+    if (selectedDelivery) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedDelivery]);
 
   const handleSelectTask = (taskId) => {
     setSimTask(taskId);
@@ -766,79 +782,114 @@ const Webhooks = () => {
       </div>
 
       {/* Inspect Modal */}
-      {selectedDelivery && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <GitPullRequestIcon className="w-4 h-4" />
+      {selectedDelivery &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+            onClick={() => setSelectedDelivery(null)}
+          >
+            <div
+              className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl relative my-auto animate-scaleUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <GitPullRequestIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 leading-tight">
+                      Webhook Delivery Snapshot
+                    </h3>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full inline-block mt-0.5">
+                      HMAC SHA-256 Validated
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900">Webhook Delivery Snapshot</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDelivery(null)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
-                title="Close"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 font-mono">
-                <div>
-                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">DELIVERY ID</span>
-                  <span className="text-slate-800 select-all font-semibold">{selectedDelivery.deliveryId}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">EVENT TYPE</span>
-                  <span className="text-indigo-600 font-semibold">{selectedDelivery.event}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">SIGNATURE VERIFIED</span>
-                  <span className="text-emerald-600 font-bold">HMAC SHA-256 Valid</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">CLIENT IP</span>
-                  <span className="text-slate-800">{selectedDelivery.ipAddress}</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDelivery(null)}
+                  className="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
               </div>
 
-              <div>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Payload Excerpt
-                </p>
-                <pre className="p-3.5 bg-slate-900 rounded-2xl text-[11px] font-mono text-purple-300 overflow-x-auto max-h-48 shadow-inner">
-                  {JSON.stringify(
-                    {
-                      deliveryId: selectedDelivery.deliveryId,
-                      event: selectedDelivery.event,
-                      status: selectedDelivery.status,
-                      summary: selectedDelivery.summary,
-                      matchedTaskId: selectedDelivery.matchedTaskId,
-                      payloadSnippet: selectedDelivery.payloadSnippet,
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
+              <div className="space-y-3.5 text-xs">
+                <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 font-mono">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans uppercase font-bold tracking-wider">
+                      DELIVERY ID
+                    </span>
+                    <span className="text-slate-800 select-all font-semibold break-all">
+                      {selectedDelivery.deliveryId}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans uppercase font-bold tracking-wider">
+                      EVENT TYPE
+                    </span>
+                    <span className="text-indigo-600 font-semibold">
+                      {selectedDelivery.event}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans uppercase font-bold tracking-wider">
+                      STATUS
+                    </span>
+                    <span className="text-emerald-700 font-bold">
+                      {selectedDelivery.status}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans uppercase font-bold tracking-wider">
+                      CLIENT IP
+                    </span>
+                    <span className="text-slate-800">
+                      {selectedDelivery.ipAddress || '127.0.0.1'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Payload Snapshot
+                    </p>
+                    <span className="text-[10px] font-bold text-slate-400">JSON</span>
+                  </div>
+                  <pre className="p-4 bg-slate-900 rounded-2xl text-[11px] font-mono text-purple-300 overflow-x-auto max-h-52 shadow-inner leading-relaxed">
+                    {JSON.stringify(
+                      {
+                        deliveryId: selectedDelivery.deliveryId,
+                        event: selectedDelivery.event,
+                        status: selectedDelivery.status,
+                        summary: selectedDelivery.summary,
+                        matchedTaskId: selectedDelivery.matchedTaskId,
+                        payloadSnippet: selectedDelivery.payloadSnippet,
+                        createdAt: selectedDelivery.createdAt,
+                      },
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDelivery(null)}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm"
+                >
+                  Close (Esc)
+                </button>
               </div>
             </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedDelivery(null)}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
