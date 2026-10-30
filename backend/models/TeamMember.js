@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 export const TEAM_ROLES = [
   'Project Lead',
+  'Project Lead / Owner',
   'Frontend Developer',
   'Backend Developer',
   'Fullstack Engineer',
