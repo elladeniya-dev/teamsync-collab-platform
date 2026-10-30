@@ -6,13 +6,10 @@ import {
   ShieldCheckIcon, 
   ShieldIcon, 
   SearchIcon, 
-  FilterIcon, 
   AlertCircleIcon, 
   CheckCircleIcon,
-  ClockIcon,
   RotateCcwIcon,
   LockIcon,
-  UserIcon,
   XIcon
 } from '../components/common/Icons';
 
@@ -99,42 +96,42 @@ const AuditLogs = () => {
   };
 
   const getActionBadgeColor = (action, status) => {
-    if (status === 'DENIED') return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    if (status === 'DENIED') return 'bg-rose-50 text-rose-700 border-rose-200';
     if (action.includes('DELETE') || action.includes('REMOVE')) {
-      return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      return 'bg-rose-50 text-rose-700 border-rose-200';
     }
     if (action.includes('CREATE') || action.includes('REGISTER')) {
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
     if (action.includes('UPDATE') || action.includes('CHANGE')) {
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      return 'bg-amber-50 text-amber-700 border-amber-200';
     }
-    return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+    return 'bg-indigo-50 text-indigo-700 border-indigo-200';
   };
 
   const getRoleBadge = (role) => {
     switch (role?.toLowerCase()) {
       case 'owner':
         return (
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
             Owner
           </span>
         );
       case 'admin':
         return (
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
             Admin
           </span>
         );
       case 'guest':
         return (
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-700 text-slate-300 border border-slate-600">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
             Guest
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
             Member
           </span>
         );
@@ -146,17 +143,17 @@ const AuditLogs = () => {
   if (isRestricted) {
     return (
       <div className="p-8 max-w-4xl mx-auto text-center space-y-6 pt-16">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-xl shadow-rose-500/10">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-sm">
           <LockIcon className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-white tracking-tight">Access Restricted</h2>
-          <p className="text-sm text-slate-400 max-w-md mx-auto">
-            The workspace immutable audit log is strictly restricted to Workspace Owners and Administrators. Your current role is <strong className="text-indigo-400 font-semibold">{user?.role || 'Member'}</strong>.
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Access Restricted</h2>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">
+            The workspace immutable audit log is strictly restricted to Workspace Owners and Administrators. Your current role is <strong className="text-indigo-600 font-semibold">{user?.role || 'Member'}</strong>.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300">
-          <ShieldIcon className="w-4 h-4 text-slate-400" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 shadow-sm">
+          <ShieldIcon className="w-4 h-4 text-slate-500" />
           <span>Contact an administrator to elevate your workspace permissions.</span>
         </div>
       </div>
@@ -164,91 +161,119 @@ const AuditLogs = () => {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto animate-fadeIn">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-              <ShieldCheckIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                Workspace Audit Trail
-                <span className="text-[10px] font-semibold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded">
-                  Immutable
-                </span>
-              </h1>
-              <p className="text-xs text-slate-400 font-medium">
-                Cryptographically logged, tamper-evident record of all team mutations and access events.
-              </p>
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-6 w-full animate-fadeIn">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <span>Workspace Audit Trail</span>
+            <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
+              Immutable
+            </span>
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Cryptographically logged, tamper-evident record of all team mutations, role updates, and security events.
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Live Sync Indicator */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-            <span className="text-slate-300 font-medium">{isConnected ? 'Live WebSocket Stream' : 'Connecting...'}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 shadow-sm text-xs">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></span>
+            <span className="text-slate-700 font-medium">{isConnected ? 'Live WebSocket Stream' : 'Connecting...'}</span>
           </div>
 
           {/* Refresh Button */}
           <button
             onClick={fetchLogsAndStats}
             disabled={refreshing}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition cursor-pointer disabled:opacity-50"
+            className="p-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl border border-slate-200/80 shadow-sm transition cursor-pointer disabled:opacity-50"
             title="Refresh logs"
           >
-            <RotateCcwIcon className={`w-4 h-4 ${refreshing ? 'animate-spin text-indigo-400' : ''}`} />
+            <RotateCcwIcon className={`w-4 h-4 ${refreshing ? 'animate-spin text-indigo-600' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Immutability Security Guarantee Banner */}
-      <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex items-start sm:items-center gap-3 text-xs text-indigo-200">
-        <ShieldIcon className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5 sm:mt-0" />
+      <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-start sm:items-center gap-3 text-xs text-indigo-950">
+        <ShieldIcon className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5 sm:mt-0" />
         <div className="flex-1 leading-relaxed">
-          <strong className="font-semibold text-white">Database Immutability Active:</strong> Audit log entries are permanent. Update and delete queries on this collection are rejected at the database engine level to guarantee evidentiary integrity for compliance.
+          <strong className="font-semibold text-slate-900">Database Immutability Active:</strong> Audit log entries are permanent. Update and delete queries on this collection are rejected at the database engine level to guarantee evidentiary integrity for compliance.
         </div>
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">Total Audit Events</p>
-          <p className="text-2xl font-bold text-white">{stats.totalLogs}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Audit Events</span>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <ShieldCheckIcon className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-slate-900">{stats.totalLogs}</span>
+            <span className="text-xs text-slate-500">permanent entries</span>
+          </div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">Recorded (Past 24h)</p>
-          <p className="text-2xl font-bold text-indigo-400">{stats.last24hLogs}</p>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Recorded (Past 24h)</span>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <span className="text-indigo-600 font-bold text-xs">24h</span>
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-indigo-600">{stats.last24hLogs}</span>
+            <span className="text-xs text-slate-500">recent actions</span>
+          </div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">Denied Access Blocks</p>
-          <p className="text-2xl font-bold text-rose-400">{stats.deniedAttempts}</p>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Denied Access Blocks</span>
+            <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+              <AlertCircleIcon className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-rose-600">{stats.deniedAttempts}</span>
+            <span className="text-xs text-slate-500">security breaches prevented</span>
+          </div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">Active Actors</p>
-          <p className="text-2xl font-bold text-emerald-400">{stats.activeActors}</p>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Actors</span>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <CheckCircleIcon className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-emerald-600">{stats.activeActors}</span>
+            <span className="text-xs text-slate-500">unique operators</span>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      {/* Search and Filters Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by actor, action, IP, or resource..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
             { id: 'ALL', label: 'All Events' },
             { id: 'DENIED', label: 'Security Blocks' },
@@ -262,8 +287,8 @@ const AuditLogs = () => {
               onClick={() => setFilterType(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer border ${
                 filterType === tab.id
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                  : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
               }`}
             >
               {tab.label}
@@ -273,11 +298,11 @@ const AuditLogs = () => {
       </div>
 
       {/* Audit Log Table */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase tracking-wider text-[11px] font-semibold">
+              <tr className="border-b border-slate-100 bg-slate-50 text-slate-500 uppercase tracking-wider text-[11px] font-semibold">
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Timestamp</th>
                 <th className="py-3 px-4">Actor</th>
@@ -286,12 +311,12 @@ const AuditLogs = () => {
                 <th className="py-3 px-4 text-right">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan="6" className="py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                       <p className="text-xs">Loading audit trail records...</p>
                     </div>
                   </td>
@@ -308,45 +333,45 @@ const AuditLogs = () => {
                   return (
                     <tr
                       key={log._id}
-                      className="hover:bg-slate-800/40 transition group"
+                      className="hover:bg-slate-50/80 transition group"
                     >
                       {/* Status */}
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                             isDenied
-                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           }`}
                         >
                           {isDenied ? (
-                            <AlertCircleIcon className="w-3 h-3 text-rose-400" />
+                            <AlertCircleIcon className="w-3 h-3 text-rose-600" />
                           ) : (
-                            <CheckCircleIcon className="w-3 h-3 text-emerald-400" />
+                            <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
                           )}
                           {log.status}
                         </span>
                       </td>
 
                       {/* Timestamp */}
-                      <td className="py-3 px-4 whitespace-nowrap text-slate-400 font-mono text-[11px]">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 font-mono text-[11px]">
                         {formatTimestamp(log.createdAt)}
                       </td>
 
                       {/* Actor */}
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold text-[10px] shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
                             {log.actor?.name ? log.actor.name[0].toUpperCase() : 'S'}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-slate-200">
+                              <span className="font-semibold text-slate-900">
                                 {log.actor?.name || 'System User'}
                               </span>
                               {getRoleBadge(log.actor?.role)}
                             </div>
-                            <span className="text-[10px] text-slate-500 block truncate max-w-[140px]">
+                            <span className="text-[11px] text-slate-400 block truncate max-w-[140px]">
                               {log.actor?.email || 'internal'}
                             </span>
                           </div>
@@ -354,33 +379,33 @@ const AuditLogs = () => {
                       </td>
 
                       {/* Action & Resource */}
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${getActionBadgeColor(
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${getActionBadgeColor(
                               log.action,
                               log.status
                             )}`}
                           >
                             {log.action}
                           </span>
-                          <span className="text-slate-400 font-mono text-[11px]">
+                          <span className="text-slate-500 font-mono text-[11px]">
                             {log.resourceType}
                           </span>
                         </div>
                       </td>
 
-                      {/* Client IP & Info */}
-                      <td className="py-3 px-4 whitespace-nowrap text-slate-400 font-mono text-[11px]">
+                      {/* Client IP */}
+                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 font-mono text-[11px]">
                         {log.ipAddress || '127.0.0.1'}
                       </td>
 
                       {/* Inspect Action */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setSelectedLog(log)}
-                          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold transition cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-semibold transition cursor-pointer"
                         >
                           Inspect
                         </button>
@@ -396,50 +421,52 @@ const AuditLogs = () => {
 
       {/* Inspect Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <ShieldIcon className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-bold text-white">Audit Entry Details</h3>
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <ShieldIcon className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Audit Entry Details</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
                 title="Close"
               >
                 <XIcon className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-950/60 rounded-xl border border-slate-800 font-mono">
+            <div className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 font-mono">
                 <div>
-                  <span className="text-slate-500 block text-[10px]">ENTRY ID</span>
-                  <span className="text-slate-300 select-all">{selectedLog._id}</span>
+                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">ENTRY ID</span>
+                  <span className="text-slate-800 select-all font-semibold">{selectedLog._id}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px]">RECORDED AT</span>
-                  <span className="text-slate-300">{formatTimestamp(selectedLog.createdAt)}</span>
+                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">RECORDED AT</span>
+                  <span className="text-slate-800">{formatTimestamp(selectedLog.createdAt)}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px]">CLIENT IP</span>
-                  <span className="text-slate-300">{selectedLog.ipAddress}</span>
+                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">CLIENT IP</span>
+                  <span className="text-slate-800">{selectedLog.ipAddress}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px]">USER AGENT</span>
-                  <span className="text-slate-300 truncate block" title={selectedLog.userAgent}>
+                  <span className="text-slate-400 block text-[10px] font-sans uppercase font-semibold">USER AGENT</span>
+                  <span className="text-slate-800 truncate block" title={selectedLog.userAgent}>
                     {selectedLog.userAgent || 'Unknown'}
                   </span>
                 </div>
               </div>
 
               <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
                   Payload Snapshot (Immutable)
                 </p>
-                <pre className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-indigo-300 overflow-x-auto max-h-48">
+                <pre className="p-3.5 bg-slate-900 rounded-2xl text-[11px] font-mono text-indigo-300 overflow-x-auto max-h-48 shadow-inner">
                   {JSON.stringify(
                     {
                       actor: selectedLog.actor,
@@ -460,7 +487,7 @@ const AuditLogs = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition cursor-pointer"
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer"
               >
                 Close
               </button>
