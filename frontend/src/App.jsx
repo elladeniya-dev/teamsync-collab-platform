@@ -13,6 +13,7 @@ import Tasks from './pages/Tasks';
 import Calendar from './pages/Calendar';
 import Team from './pages/Team';
 import AuditLogs from './pages/AuditLogs';
+import Webhooks from './pages/Webhooks';
 import Login from './pages/Login';
 
 const GOOGLE_CLIENT_ID =
@@ -43,6 +44,7 @@ function App() {
                             <Route path="/calendar" element={<Calendar />} />
                             <Route path="/team" element={<Team />} />
                             <Route path="/audit-logs" element={<AuditLogs />} />
+                            <Route path="/webhooks" element={<Webhooks />} />
                           </Routes>
                         </Layout>
                       </ProtectedRoute>

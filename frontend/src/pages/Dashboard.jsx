@@ -99,9 +99,10 @@ const Dashboard = () => {
   }, [socket]);
 
   const now = new Date();
-  const upcomingTasks = tasks.filter(t => new Date(t.deadline) >= now).slice(0, 5);
-  const overdueTasks = tasks.filter(t => new Date(t.deadline) < now);
-  const meetings = tasks.filter(t => t.type === 'Meeting');
+  const completedTasks = tasks.filter((t) => t.status === 'Done');
+  const upcomingTasks = tasks.filter((t) => new Date(t.deadline) >= now && t.status !== 'Done').slice(0, 5);
+  const overdueTasks = tasks.filter((t) => new Date(t.deadline) < now && t.status !== 'Done');
+  const meetings = tasks.filter((t) => t.type === 'Meeting');
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 w-full">
@@ -152,7 +153,9 @@ const Dashboard = () => {
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900">{tasks.length}</span>
-            <span className="text-xs text-slate-500">active deliverables</span>
+            <span className="text-xs text-slate-500 font-medium">
+              {completedTasks.length} done ({tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%)
+            </span>
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import authRoutes from './authRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import workspaceRoutes from './workspaceRoutes.js';
 import auditRoutes from './auditRoutes.js';
+import webhookRoutes from './webhookRoutes.js';
 
 const apiRouter = Router();
 
@@ -14,5 +15,6 @@ apiRouter.use('/team', teamRoutes);
 apiRouter.use('/notifications', notificationRoutes);
 apiRouter.use('/workspaces', workspaceRoutes);
 apiRouter.use('/audit-logs', auditRoutes);
+apiRouter.use('/webhooks', webhookRoutes);
 
 export default apiRouter;

@@ -10,10 +10,19 @@ import {
   ClockIcon, 
   CalendarIcon,
   CheckCircleIcon,
-  LockIcon
+  LockIcon,
+  GitPullRequestIcon,
+  ExternalLinkIcon
 } from '../components';
 import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
-import { getTypeStyle, TASK_TYPES } from '../utils/taskHelpers';
+import { 
+  getTypeStyle, 
+  TASK_TYPES, 
+  TASK_STATUSES, 
+  TASK_PRIORITIES, 
+  getStatusStyle, 
+  getPriorityStyle 
+} from '../utils/taskHelpers';
 import dayjs from 'dayjs';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +43,7 @@ const Tasks = () => {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedAssignee, setSelectedAssignee] = useState('All');
 
   const [taskForm, setTaskForm] = useState({
@@ -41,7 +51,9 @@ const Tasks = () => {
     description: '',
     assignee: '',
     deadline: dayjs().add(1, 'day'),
-    type: 'Review'
+    type: 'Review',
+    status: 'In Progress',
+    priority: 'Medium',
   });
 
   useEffect(() => {
@@ -116,7 +128,9 @@ const Tasks = () => {
       description: '',
       assignee: teamMembers.length > 0 ? teamMembers[0].name : '',
       deadline: dayjs().add(1, 'day').hour(17).minute(0),
-      type: 'Review'
+      type: 'Review',
+      status: 'In Progress',
+      priority: 'Medium',
     });
     setIsModalOpen(true);
   };
@@ -129,7 +143,9 @@ const Tasks = () => {
       description: task.description || '',
       assignee: task.assignee || '',
       deadline: dayjs(task.deadline),
-      type: task.type || 'Review'
+      type: task.type || 'Review',
+      status: task.status || 'In Progress',
+      priority: task.priority || 'Medium',
     });
     setIsModalOpen(true);
   };
@@ -241,11 +257,12 @@ const Tasks = () => {
         (t.assignee && t.assignee.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchType = selectedType === 'All' || t.type === selectedType;
+      const matchStatus = selectedStatus === 'All' || (t.status || 'In Progress') === selectedStatus;
       const matchAssignee = selectedAssignee === 'All' || t.assignee === selectedAssignee;
 
-      return matchSearch && matchType && matchAssignee;
+      return matchSearch && matchType && matchStatus && matchAssignee;
     });
-  }, [tasks, searchQuery, selectedType, selectedAssignee]);
+  }, [tasks, searchQuery, selectedType, selectedStatus, selectedAssignee]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 w-full">
@@ -288,21 +305,40 @@ const Tasks = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Type:</span>
-          {['All', ...TASK_TYPES].map((type) => (
-            <button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                selectedType === type
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {type}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Status:</span>
+            {['All', ...TASK_STATUSES].map((status) => (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(status)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                  selectedStatus === status
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Type:</span>
+            {['All', ...TASK_TYPES].map((type) => (
+              <button
+                key={type}
+                onClick={() => setSelectedType(type)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                  selectedType === type
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -332,6 +368,7 @@ const Tasks = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTasks.map((task) => {
             const style = getTypeStyle(task.type);
+            const statusStyle = getStatusStyle(task.status || 'In Progress');
             const relative = getRelativeDeadline(task.deadline);
             return (
               <div
@@ -339,12 +376,21 @@ const Tasks = () => {
                 className={`bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden border-l-4 ${style.border}`}
               >
                 <div className="p-5 space-y-3">
-                  {/* Top line: Type pill + relative due */}
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold border ${style.pill}`}>
-                      {task.type}
-                    </span>
-                    <span className={`text-xs ${relative.color}`}>{relative.text}</span>
+                  {/* Top line: Type pill + Status pill + relative due */}
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${style.pill}`}>
+                        {task.type}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${statusStyle.pill}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`}></span>
+                        {task.status || 'In Progress'}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border ${getPriorityStyle(task.priority || 'Medium')}`}>
+                        {task.priority || 'Medium'}
+                      </span>
+                    </div>
+                    <span className={`text-xs whitespace-nowrap ${relative.color}`}>{relative.text}</span>
                   </div>
 
                   {/* Title & Description */}
@@ -358,6 +404,21 @@ const Tasks = () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Merged GitHub PR Badge if transitioned via webhook */}
+                  {task.githubPrNumber && (
+                    <a
+                      href={task.githubPrUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 text-slate-200 text-xs font-mono font-semibold hover:bg-slate-800 transition border border-slate-700 w-fit"
+                      title="View merged GitHub Pull Request"
+                    >
+                      <GitPullRequestIcon className="w-3.5 h-3.5 text-purple-400" />
+                      <span>PR #{task.githubPrNumber} Merged</span>
+                      <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                    </a>
+                  )}
 
                   {/* Deadline row */}
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
@@ -499,6 +560,44 @@ const Tasks = () => {
                 <option value="Review">Review</option>
                 <option value="Meeting">Meeting</option>
                 <option value="Deadline">Deadline</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Task Status */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Status *
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                value={taskForm.status || 'In Progress'}
+                onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })}
+              >
+                {TASK_STATUSES.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Task Priority */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Priority *
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                value={taskForm.priority || 'Medium'}
+                onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
+              >
+                {TASK_PRIORITIES.map((pr) => (
+                  <option key={pr} value={pr}>
+                    {pr}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

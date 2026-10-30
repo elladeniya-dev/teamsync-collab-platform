@@ -87,4 +87,11 @@ export const auditApi = {
   getStats: () => apiClient.get('/api/audit-logs/stats'),
 };
 
+// Webhook & Integration API
+export const webhookApi = {
+  getDeliveries: (params) => apiClient.get('/api/webhooks/deliveries', { params }),
+  getStats: () => apiClient.get('/api/webhooks/stats'),
+  simulate: (data) => apiClient.post('/api/webhooks/simulate', data),
+};
+
 export default apiClient;

@@ -10,7 +10,8 @@ import {
   CheckIcon,
   XIcon,
   ShieldIcon,
-  LockIcon
+  LockIcon,
+  WebhookIcon
 } from '../common/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
@@ -39,6 +40,7 @@ const Sidebar = () => {
     { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
     { to: '/team', label: 'My Team', icon: TeamIcon },
     { to: '/audit-logs', label: 'Audit Logs', icon: ShieldIcon, badge: 'RBAC' },
+    { to: '/webhooks', label: 'Webhooks', icon: WebhookIcon, badge: 'GitHub' },
   ];
 
   // Close workspace and role dropdowns on outside click

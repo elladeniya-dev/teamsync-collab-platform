@@ -32,6 +32,8 @@ export const createTask = async (taskData, auditContext = {}) => {
       details: {
         title: task.title,
         type: task.type,
+        status: task.status,
+        priority: task.priority,
         assignee: task.assignee,
         deadline: task.deadline,
       },

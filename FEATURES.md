@@ -53,13 +53,16 @@ flowchart TD
   - [x] **Interactive Role Switcher Pill:** Built-in testing popover in the user profile footer allowing seamless demonstration of all 4 roles in real time.
 
 ### 3. Idempotent Webhooks & Third-Party Integrations (GitHub & Slack)
-- **Status:** ⬜ Planned
-- **Goal:** Automate deliverable lifecycle through external developer toolchains.
-- **Tech Stack:** Webhook Signature Verification (`crypto.timingSafeEqual`), HMAC SHA-256.
+- **Status:** ✅ Completed
+- **Goal:** Automate deliverable lifecycle through external developer toolchains with cryptographic authentication and idempotency guarantees.
+- **Tech Stack:** Cryptographic HMAC SHA-256 (`crypto.timingSafeEqual`), `WebhookDelivery` Idempotency Engine, Outbound Slack Dispatcher, Socket.io Real-Time Stream.
 - **Architectural Scope:**
-  - **Inbound GitHub Webhook:** Listen to `pull_request.closed` events; if merged and branch/PR mentions task title/ID, automatically transition task status to `Done`.
-  - **Idempotency Guarantee:** Cache event IDs in Redis to drop duplicate incoming webhook payloads.
-  - **Outbound Webhook Dispatcher:** Allow teams to register Slack/Discord webhook URLs for sprint milestone alerts.
+  - [x] **HMAC-SHA256 Signature Verification (`webhookMiddleware.js`):** Validates raw payload against `X-Hub-Signature-256` using timing-safe buffer comparison to prevent timing attacks.
+  - [x] **Idempotency Engine (`WebhookDelivery.js`):** Deduplicates deliveries by `X-GitHub-Delivery` GUID. Duplicate requests return `200 OK (Idempotent)` without re-executing state mutations or duplicate side-effects.
+  - [x] **Automated Task Transitions:** Inbound `pull_request.closed` (merged) automatically matches deliverables by task ID or title and transitions status to `Done`, attaching PR metadata and recording an immutable `AuditLog` entry.
+  - [x] **Real-Time UI Reconciliations:** Broadcasts `task:updated`, `notification:new`, and `webhook:delivery` across connected clients via WebSockets.
+  - [x] **Interactive Webhook Simulator UI (`/webhooks`):** Dedicated developer console with one-click test payload generator, payload inspector, live deliveries stream, and idempotency toggle to demonstrate replay prevention in real time.
+  - [x] **Outbound Slack Dispatcher:** Sends formatted Slack automation blocks on deliverable completions.
 
 ### 4. Redis Caching & Sliding-Window Rate Limiting
 - **Status:** ⬜ Planned
@@ -404,10 +407,13 @@ flowchart TD
 ## 🔗 Phase 8: Webhooks & External Tool Integrations
 
 ### Feature 8.1: Idempotent Webhook Engine (GitHub & Slack)
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Connect external developer activities to internal sprint deliverables.
 - **Backend Tasks:**
-  - [ ] Create endpoint `POST /api/webhooks/github` with HMAC-SHA256 signature verification.
-  - [ ] Transition task status to `Done` when associated PR is merged.
-  - [ ] Implement idempotent request deduplication via Redis.
-  - [ ] Outbound Slack webhook dispatcher for sprint milestone alerts.
+  - [x] Created endpoint `POST /api/webhooks/github` with cryptographic HMAC-SHA256 signature verification (`webhookMiddleware.js`).
+  - [x] Automatically transitioned task status to `Done` when associated PR is merged.
+  - [x] Implemented idempotent request deduplication via `WebhookDelivery` model.
+  - [x] Outbound Slack webhook dispatcher for deliverable milestone alerts.
+- **Frontend Tasks:**
+  - [x] Created `/webhooks` console with live delivery table and payload inspector.
+  - [x] Built interactive "Simulate GitHub PR Merge" dispatcher with idempotency verification.
