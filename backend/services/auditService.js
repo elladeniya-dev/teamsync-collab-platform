@@ -1,5 +1,6 @@
 import AuditLog from '../models/AuditLog.js';
 import { broadcastEvent } from '../socket/socketManager.js';
+import { normalizeRole } from '../middlewares/rbacMiddleware.js';
 
 /**
  * Record an immutable audit log entry
@@ -20,7 +21,7 @@ export const recordAuditLog = async ({
         id: actor._id || actor.id,
         name: actor.name || 'System User',
         email: actor.email || 'system@teamsync.internal',
-        role: actor.role || 'Member',
+        role: normalizeRole(actor.role),
       },
       action,
       resourceType,

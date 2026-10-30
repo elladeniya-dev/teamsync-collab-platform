@@ -22,7 +22,19 @@ const auditLogSchema = new mongoose.Schema(
       },
       role: {
         type: String,
-        enum: ['Owner', 'Admin', 'Member', 'Guest', 'System'],
+        enum: [
+          'Owner', 'Admin', 'Member', 'Guest', 'System',
+          'owner', 'admin', 'member', 'guest', 'system'
+        ],
+        set: (r) => {
+          if (!r) return 'Member';
+          const lower = String(r).toLowerCase();
+          if (lower === 'owner') return 'Owner';
+          if (lower === 'admin') return 'Admin';
+          if (lower === 'guest') return 'Guest';
+          if (lower === 'system') return 'System';
+          return 'Member';
+        },
         default: 'Member',
       },
     },
