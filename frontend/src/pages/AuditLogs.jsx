@@ -138,7 +138,8 @@ const AuditLogs = () => {
     }
   };
 
-  const isRestricted = user?.role === 'Guest' || user?.role === 'Member';
+  const normalizedUserRole = (user?.role || '').toLowerCase();
+  const isRestricted = normalizedUserRole !== 'owner' && normalizedUserRole !== 'admin';
 
   if (isRestricted) {
     return (

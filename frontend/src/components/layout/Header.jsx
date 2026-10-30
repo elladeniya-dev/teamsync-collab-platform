@@ -1,10 +1,9 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { PlusIcon, MenuIcon, PlugIcon } from '../common/Icons';
+import { PlusIcon, MenuIcon } from '../common/Icons';
 import NotificationMenu from '../notifications/NotificationMenu';
 import { useSocket } from '../../context/SocketContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { useDemoMode } from '../../context/DemoModeContext';
 
 const PAGE_TITLES = {
   '/': { title: 'Dashboard', subtitle: 'Real-time overview of tasks, team workload, and upcoming deadlines' },
@@ -20,7 +19,6 @@ const Header = ({ onToggleSidebar, onOpenNewTask }) => {
   const current = PAGE_TITLES[location.pathname] || { title: 'TeamSync', subtitle: 'Collaboration Platform' };
   const { isConnected, activeCollaborators } = useSocket();
   const { activeWorkspace } = useWorkspace();
-  const { isTestHarnessPlugged, toggleTestHarness } = useDemoMode();
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
@@ -113,31 +111,6 @@ const Header = ({ onToggleSidebar, onOpenNewTask }) => {
           ></span>
           <span className="hidden sm:inline">{isConnected ? 'Live Sync' : 'Connecting...'}</span>
         </div>
-
-        {/* Deploy-Ready vs Test Harness Plug/Unplug Switch */}
-        <button
-          type="button"
-          onClick={toggleTestHarness}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition cursor-pointer ${
-            isTestHarnessPlugged
-              ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100 shadow-sm'
-              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-          }`}
-          title={
-            isTestHarnessPlugged
-              ? 'Test Harness Active (Simulators & Sandbox Connected). Click to unplug and switch to pure production.'
-              : 'Production Mode Active. Click to plug in test harnesses & simulator.'
-          }
-        >
-          <PlugIcon
-            className={`w-3.5 h-3.5 ${
-              isTestHarnessPlugged ? 'text-purple-600 animate-pulse' : 'text-slate-400'
-            }`}
-          />
-          <span className="hidden md:inline">
-            {isTestHarnessPlugged ? 'Test Harness [Plugged]' : 'Production'}
-          </span>
-        </button>
 
         {/* Real-time Notification Bell & Flyout Popover */}
         <NotificationMenu />

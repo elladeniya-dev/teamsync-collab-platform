@@ -3,7 +3,6 @@ import Swal from 'sweetalert2';
 import { webhookApi, taskApi } from '../api/client';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
-import { useDemoMode } from '../context/DemoModeContext';
 import {
   WebhookIcon,
   GitPullRequestIcon,
@@ -16,14 +15,14 @@ import {
   PlayIcon,
   LockIcon,
   ExternalLinkIcon,
-  XIcon,
-  PlugIcon
+  XIcon
 } from '../components/common/Icons';
+
+const isDevToolsEnabled = import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true';
 
 const Webhooks = () => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
-  const { isTestHarnessPlugged, plugTestHarness, unplugTestHarness } = useDemoMode();
 
   const [deliveries, setDeliveries] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -244,7 +243,7 @@ const Webhooks = () => {
     }
   };
 
-  const isRestricted = user?.role === 'Guest';
+  const isRestricted = (user?.role || '').toLowerCase() === 'guest';
 
   if (isRestricted) {
     return (
@@ -350,55 +349,8 @@ const Webhooks = () => {
         </div>
       </div>
 
-      {/* Plug/Unplug State Banners */}
-      {!isTestHarnessPlugged ? (
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <div>
-              <strong className="text-slate-900 font-semibold">Production Inbound Gateway Ready:</strong>
-              <span className="ml-1 text-slate-500">
-                Listening for cryptographically authenticated GitHub events at <code className="font-mono text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded border border-indigo-200">/api/webhooks/github</code>. Test harnesses are unplugged.
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={plugTestHarness}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold border border-purple-200 transition cursor-pointer shrink-0"
-            title="Plug in test simulator for live demonstration"
-          >
-            <PlugIcon className="w-3.5 h-3.5 text-purple-600" />
-            <span>Plug In Test Simulator</span>
-          </button>
-        </div>
-      ) : (
-        <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-950 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <PlugIcon className="w-4 h-4 text-purple-700 shrink-0 animate-pulse" />
-            <div>
-              <strong className="font-semibold">Developer Test Harness Plugged In:</strong>
-              <span className="ml-1 text-purple-800">
-                Interactive simulator active. Dispatch cryptographically signed merge payloads to test automated task transitions without pushing to GitHub.
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={unplugTestHarness}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-purple-100/60 text-purple-700 font-semibold border border-purple-300 transition cursor-pointer shrink-0"
-            title="Unplug testing harness to return to pure production mode"
-          >
-            <XIcon className="w-3.5 h-3.5" />
-            <span>Unplug Test Harness</span>
-          </button>
-        </div>
-      )}
-
-      {/* Webhook Configuration & Simulator: Responsive Plug / Unplug State */}
-      {!isTestHarnessPlugged ? (
+      {/* Webhook Configuration & Simulator: Controlled strictly by .env (VITE_ENABLE_DEV_TOOLS) */}
+      {!isDevToolsEnabled ? (
         /* Pure Production Deploy-Ready Card (Full Width) */
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-5 animate-fadeIn">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -577,14 +529,9 @@ const Webhooks = () => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={unplugTestHarness}
-                  className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition cursor-pointer"
-                  title="Unplug Simulator"
-                >
-                  Unplug
-                </button>
+                <span className="text-[10px] font-mono text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full font-semibold">
+                  DEV_TOOLS
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">

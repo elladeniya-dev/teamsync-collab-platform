@@ -5,7 +5,6 @@ import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
 import { NotificationProvider } from './context/NotificationContext';
-import { DemoModeProvider } from './context/DemoModeContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { Layout } from './components';
 
@@ -28,33 +27,31 @@ function App() {
         <SocketProvider>
           <WorkspaceProvider>
             <NotificationProvider>
-              <DemoModeProvider>
-                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                  <Routes>
-                    {/* Public Auth Route */}
-                    <Route path="/login" element={<Login />} />
+              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <Routes>
+                  {/* Public Auth Route */}
+                  <Route path="/login" element={<Login />} />
 
-                    {/* Protected Workspace Routes */}
-                    <Route
-                      path="/*"
-                      element={
-                        <ProtectedRoute>
-                          <Layout>
-                            <Routes>
-                              <Route path="/" element={<Dashboard />} />
-                              <Route path="/tasks" element={<Tasks />} />
-                              <Route path="/calendar" element={<Calendar />} />
-                              <Route path="/team" element={<Team />} />
-                              <Route path="/audit-logs" element={<AuditLogs />} />
-                              <Route path="/webhooks" element={<Webhooks />} />
-                            </Routes>
-                          </Layout>
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </Router>
-              </DemoModeProvider>
+                  {/* Protected Workspace Routes */}
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/tasks" element={<Tasks />} />
+                            <Route path="/calendar" element={<Calendar />} />
+                            <Route path="/team" element={<Team />} />
+                            <Route path="/audit-logs" element={<AuditLogs />} />
+                            <Route path="/webhooks" element={<Webhooks />} />
+                          </Routes>
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Router>
             </NotificationProvider>
           </WorkspaceProvider>
         </SocketProvider>

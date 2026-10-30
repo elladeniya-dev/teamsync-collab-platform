@@ -1,4 +1,5 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
 import * as webhookService from '../services/webhookService.js';
 
 /**
@@ -52,9 +53,9 @@ export const getWebhookStats = asyncHandler(async (req, res) => {
  * Access: Private (Owner, Admin, Member)
  */
 export const simulateWebhook = asyncHandler(async (req, res) => {
-  // If demo mode is explicitly disabled (e.g. in strict production deployment), reject simulator execution
-  if (process.env.ENABLE_DEMO_MODE === 'false') {
-    throw new ApiError(403, 'Simulation test harness is unplugged (Production Deploy Mode active).');
+  // In production, simulator is completely disabled. Only enabled if ENABLE_DEV_TOOLS=true in .env
+  if (process.env.ENABLE_DEV_TOOLS !== 'true') {
+    throw new ApiError(403, 'Webhook simulator endpoint is disabled in production deployment. Enable ENABLE_DEV_TOOLS=true in backend/.env for local developer testing.');
   }
 
   const { taskId, prTitle, prNumber, githubAuthor, deliveryId } = req.body;

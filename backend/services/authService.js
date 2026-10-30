@@ -88,7 +88,7 @@ export const googleAuthService = async (credential) => {
       email: user.email,
       avatar: user.avatar,
       authProvider: user.authProvider,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     token,
   };
@@ -134,7 +134,7 @@ export const registerUserService = async ({ name, email, password }) => {
       email: user.email,
       avatar: user.avatar,
       authProvider: user.authProvider,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     token,
   };
@@ -185,7 +185,7 @@ export const loginUserService = async ({ email, password }) => {
       email: user.email,
       avatar: user.avatar,
       authProvider: user.authProvider,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     token,
   };
@@ -205,7 +205,7 @@ export const getMeService = async (userId) => {
     email: user.email,
     avatar: user.avatar,
     authProvider: user.authProvider,
-    role: user.role,
+    role: normalizeRole(user.role),
   };
 };
 
