@@ -38,6 +38,38 @@ const taskSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    subtasks: [
+      {
+        title: { type: String, required: true, trim: true },
+        completed: { type: Boolean, default: false },
+        completedAt: { type: Date, default: null },
+      },
+    ],
+    comments: [
+      {
+        author: {
+          id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          name: { type: String, required: true },
+          email: { type: String, default: '' },
+          avatar: { type: String, default: '' },
+          role: { type: String, default: 'Member' },
+        },
+        text: { type: String, required: true, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    activity: [
+      {
+        actor: {
+          name: { type: String, required: true },
+          email: { type: String, default: '' },
+          avatar: { type: String, default: '' },
+        },
+        action: { type: String, required: true },
+        details: { type: String, default: '' },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

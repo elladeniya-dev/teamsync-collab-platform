@@ -50,9 +50,16 @@ export const authApi = {
 // Tasks API
 export const taskApi = {
   getAll: () => apiClient.get('/api/tasks'),
+  getById: (id) => apiClient.get(`/api/tasks/${id}`),
   create: (taskData) => apiClient.post('/api/tasks', taskData),
   update: (id, taskData) => apiClient.put(`/api/tasks/${id}`, taskData),
   delete: (id) => apiClient.delete(`/api/tasks/${id}`),
+  addSubtask: (id, title) => apiClient.post(`/api/tasks/${id}/subtasks`, { title }),
+  toggleSubtask: (id, subtaskId, completed) =>
+    apiClient.patch(`/api/tasks/${id}/subtasks/${subtaskId}`, { completed }),
+  deleteSubtask: (id, subtaskId) =>
+    apiClient.delete(`/api/tasks/${id}/subtasks/${subtaskId}`),
+  addComment: (id, text) => apiClient.post(`/api/tasks/${id}/comments`, { text }),
 };
 
 // Team API

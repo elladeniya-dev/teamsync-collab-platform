@@ -43,3 +43,56 @@ export const deleteTask = asyncHandler(async (req, res) => {
   });
   res.status(200).json({ success: true, message: 'Task deleted successfully' });
 });
+
+export const addSubtask = asyncHandler(async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.addSubtaskService(req.params.id, req.body.title, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
+  res.status(201).json(task);
+});
+
+export const toggleSubtask = asyncHandler(async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.toggleSubtaskService(
+    req.params.id,
+    req.params.subtaskId,
+    req.body.completed,
+    {
+      actor: req.user,
+      ipAddress,
+      userAgent,
+    }
+  );
+  res.status(200).json(task);
+});
+
+export const deleteSubtask = asyncHandler(async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.deleteSubtaskService(
+    req.params.id,
+    req.params.subtaskId,
+    {
+      actor: req.user,
+      ipAddress,
+      userAgent,
+    }
+  );
+  res.status(200).json(task);
+});
+
+export const addComment = asyncHandler(async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.addCommentService(req.params.id, req.body.text, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
+  res.status(201).json(task);
+});

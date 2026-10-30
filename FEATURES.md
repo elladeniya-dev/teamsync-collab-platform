@@ -166,28 +166,28 @@ flowchart TD
 ---
 
 ### Feature 1.3: Interactive Kanban Board
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Visual drag-and-drop workflow columns (`To Do`, `In Progress`, `Under Review`, `Done`).
 - **Frontend Tasks:**
-  - [ ] Install drag-and-drop library (e.g. `@hello-pangea/dnd`).
-  - [ ] Create `KanbanBoard.jsx` component with columns for each status.
-  - [ ] Add view switcher on Tasks page: **List View** ⇄ **Kanban Board**.
-  - [ ] Implement optimistic drag-and-drop update with instant API sync (`PUT /api/tasks/:id`).
+  - [x] Created `KanbanBoard.jsx` component with columns for each status.
+  - [x] Added view switcher on Tasks page: **List View** ⇄ **Kanban Board** with localStorage persistence.
+  - [x] Implemented optimistic drag-and-drop update with instant API sync (`PUT /api/tasks/:id`).
 
 ---
 
 ### Feature 1.4: Subtasks & Progress Checklist
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Break down larger deliverables into verifiable checklist items.
 - **Backend Tasks:**
-  - [ ] Add `subtasks` array to `Task.js`:
+  - [x] Added `subtasks` array to `Task.js`:
     ```js
-    subtasks: [{ title: String, completed: { type: Boolean, default: false } }]
+    subtasks: [{ title: String, completed: { type: Boolean, default: false }, completedAt: Date }]
     ```
+  - [x] Added subtask CRUD endpoints (`POST /api/tasks/:id/subtasks`, `PATCH`, `DELETE`).
 - **Frontend Tasks:**
-  - [ ] Add checklist UI inside task edit modal.
-  - [ ] Display mini progress bar (`X of Y completed`) on task cards.
-  - [ ] Allow checking off subtasks directly from the task card.
+  - [x] Added checklist UI inside `TaskDetailModal.jsx`.
+  - [x] Displayed mini progress bar (`X of Y completed`) on task cards in Kanban & List views.
+  - [x] Allowed checking off subtasks directly with real-time progress calculations.
 
 ---
 
@@ -217,17 +217,14 @@ flowchart TD
 ---
 
 ### Feature 2.2: Task Comments & Activity History
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Keep team discussions and audit logs attached to specific deliverables.
 - **Backend Tasks:**
-  - [ ] Create `Comment` model or embed comments in `Task.js`:
-    ```js
-    comments: [{ user: String, text: String, createdAt: { type: Date, default: Date.now } }]
-    ```
-  - [ ] Add endpoint `POST /api/tasks/:id/comments`.
+  - [x] Created embedded comments and activity schema in `Task.js`.
+  - [x] Added endpoint `POST /api/tasks/:id/comments` with WebSocket broadcasting and assignee notifications.
 - **Frontend Tasks:**
-  - [ ] Task Details drawer/modal with comment feed and input.
-  - [ ] Auto-generate activity log (`"Alex moved task to Done"`).
+  - [x] Task Details modal with comment feed and message post input.
+  - [x] Auto-generated activity log (`"Transitioned status"`, `"Added subtask"`, `"Posted comment"`).
 
 ---
 

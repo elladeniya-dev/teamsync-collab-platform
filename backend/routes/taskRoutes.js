@@ -5,6 +5,10 @@ import {
   updateTask,
   deleteTask,
   getTaskById,
+  addSubtask,
+  toggleSubtask,
+  deleteSubtask,
+  addComment,
 } from '../controllers/taskController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { requireRole } from '../middlewares/rbacMiddleware.js';
@@ -23,5 +27,13 @@ router.put('/:id', protect, requireRole(['Owner', 'Admin', 'Member']), updateTas
 
 // Delete task: Owner, Admin only (Member and Guest denied)
 router.delete('/:id', protect, requireRole(['Owner', 'Admin']), deleteTask);
+
+// Subtask management: Owner, Admin, Member (Guest denied)
+router.post('/:id/subtasks', protect, requireRole(['Owner', 'Admin', 'Member']), addSubtask);
+router.patch('/:id/subtasks/:subtaskId', protect, requireRole(['Owner', 'Admin', 'Member']), toggleSubtask);
+router.delete('/:id/subtasks/:subtaskId', protect, requireRole(['Owner', 'Admin', 'Member']), deleteSubtask);
+
+// Comment management: Owner, Admin, Member (Guest denied)
+router.post('/:id/comments', protect, requireRole(['Owner', 'Admin', 'Member']), addComment);
 
 export default router;
