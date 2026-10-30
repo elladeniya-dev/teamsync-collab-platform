@@ -264,12 +264,12 @@ const Webhooks = () => {
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Idempotent Webhooks & GitHub Integration</span>
             <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
               HMAC SHA-256
             </span>
-          </h2>
+          </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Cryptographically authenticated inbound webhook engine with replay deduplication and automated task transitions.
           </p>

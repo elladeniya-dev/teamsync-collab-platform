@@ -16,7 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen = false, onClose }) => {
   const { user, logout, changeUserRole } = useAuth();
   const { 
     workspaces, 
@@ -95,21 +95,48 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 h-full bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0 relative">
-      <div className="overflow-y-auto">
-        {/* Brand Logo */}
-        <div className="p-6 border-b border-slate-800/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-            <LayersIcon className="w-5 h-5 text-white" />
+    <>
+      {/* Mobile Drawer Backdrop */}
+      {isOpen && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 h-full bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        }`}
+      >
+        <div className="overflow-y-auto">
+          {/* Brand Logo & Mobile Close Button */}
+          <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                <LayersIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
+                  TeamSync
+                  <span className="text-[10px] font-semibold uppercase bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">PRO</span>
+                </span>
+                <p className="text-xs text-slate-400 font-medium">Collab Platform</p>
+              </div>
+            </div>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                aria-label="Close navigation sidebar"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
-          <div>
-            <span className="text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
-              TeamSync
-              <span className="text-[10px] font-semibold uppercase bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">PRO</span>
-            </span>
-            <p className="text-xs text-slate-400 font-medium">Collab Platform</p>
-          </div>
-        </div>
 
         {/* Dynamic Workspace & Sprint Switcher Pill */}
         <div className="relative px-4 my-3" ref={menuRef}>
@@ -262,6 +289,9 @@ const Sidebar = () => {
                   key={item.to}
                   to={item.to}
                   end={item.to === '/'}
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group ${
                       isActive
@@ -397,6 +427,7 @@ const Sidebar = () => {
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

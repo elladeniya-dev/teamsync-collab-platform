@@ -101,11 +101,11 @@ const Calendar = () => {
   return (
     <div className="h-full flex flex-col space-y-3 max-w-7xl mx-auto w-full">
       {/* Calendar Header with Navigation Controls */}
-      <div className="shrink-0 bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="shrink-0 bg-white px-4 sm:px-5 py-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <span>{monthName}</span>
-          </h2>
+          </h1>
           <p className="text-xs text-slate-500">Interactive delivery and milestone schedule</p>
         </div>
 

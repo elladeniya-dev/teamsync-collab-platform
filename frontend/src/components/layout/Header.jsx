@@ -1,32 +1,63 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { PlusIcon } from '../common/Icons';
+import { PlusIcon, MenuIcon } from '../common/Icons';
 import NotificationMenu from '../notifications/NotificationMenu';
 import { useSocket } from '../../context/SocketContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
 
 const PAGE_TITLES = {
   '/': { title: 'Dashboard', subtitle: 'Real-time overview of tasks, team workload, and upcoming deadlines' },
-  '/tasks': { title: 'Task Manager', subtitle: 'Organize, assign, and track team tasks and deliverables' },
+  '/tasks': { title: 'Task Deliverables', subtitle: 'Organize, assign, and track team tasks and deliverables' },
   '/calendar': { title: 'Calendar & Deadlines', subtitle: 'Interactive monthly schedule and timeline view' },
   '/team': { title: 'Team Directory', subtitle: 'Manage team members, roles, and collaboration permissions' },
+  '/audit-logs': { title: 'Audit Trail', subtitle: 'Cryptographically logged, immutable workspace activity records' },
+  '/webhooks': { title: 'Webhooks & Integrations', subtitle: 'Cryptographically authenticated inbound webhooks and CI/CD triggers' },
 };
 
-const Header = ({ onOpenNewTask }) => {
+const Header = ({ onToggleSidebar, onOpenNewTask }) => {
   const location = useLocation();
   const current = PAGE_TITLES[location.pathname] || { title: 'TeamSync', subtitle: 'Collaboration Platform' };
   const { isConnected, activeCollaborators } = useSocket();
+  const { activeWorkspace } = useWorkspace();
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">{current.title}</h1>
-        <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">{current.subtitle}</p>
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile / Tablet Sidebar Drawer Toggle */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0"
+          title="Toggle Navigation Menu"
+          aria-label="Toggle navigation menu"
+        >
+          <MenuIcon className="w-5 h-5" />
+        </button>
+
+        {/* Clean Workspace Breadcrumb (Replaces repetitive double headings) */}
+        <nav className="flex items-center gap-2 text-sm min-w-0" aria-label="Breadcrumb">
+          <div className="flex items-center gap-1.5 font-medium text-slate-500 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></span>
+            <span className="truncate max-w-[110px] sm:max-w-xs text-slate-700 font-semibold">
+              {activeWorkspace?.name || 'Main Workspace'}
+            </span>
+          </div>
+          <span className="text-slate-300 select-none">/</span>
+          <span className="font-semibold text-slate-900 truncate">
+            {current.title}
+          </span>
+          {activeWorkspace?.currentSprint && (
+            <span className="hidden sm:inline-flex text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md ml-1 shrink-0">
+              {activeWorkspace.currentSprint}
+            </span>
+          )}
+        </nav>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
         {/* Active Collaborator Presence Stack */}
         {activeCollaborators.length > 0 && (
-          <div className="hidden lg:flex items-center gap-2 pr-2 border-r border-slate-200">
+          <div className="hidden md:flex items-center gap-2 pr-2 border-r border-slate-200">
             <span className="text-[11px] text-slate-400 font-medium">Online:</span>
             <div className="flex -space-x-2 overflow-hidden items-center">
               {activeCollaborators.slice(0, 4).map((collab) => (
@@ -62,7 +93,7 @@ const Header = ({ onOpenNewTask }) => {
 
         {/* Dynamic WebSocket Connection Status Indicator */}
         <div
-          className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
             isConnected
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
               : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -78,13 +109,13 @@ const Header = ({ onOpenNewTask }) => {
               isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
             }`}
           ></span>
-          <span>{isConnected ? 'Live Sync' : 'Connecting...'}</span>
+          <span className="hidden sm:inline">{isConnected ? 'Live Sync' : 'Connecting...'}</span>
         </div>
 
         {/* Real-time Notification Bell & Flyout Popover */}
         <NotificationMenu />
 
-        {/* Global Quick Action button */}
+        {/* Global Quick Action button (if passed) */}
         {onOpenNewTask && (
           <button
             onClick={onOpenNewTask}

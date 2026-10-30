@@ -269,7 +269,7 @@ const Tasks = () => {
       {/* Top Bar with Title and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Task Deliverables</h2>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Task Deliverables</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Showing {filteredTasks.length} of {tasks.length} total tasks
           </p>
@@ -278,7 +278,7 @@ const Tasks = () => {
         <button
           onClick={handleOpenAdd}
           disabled={isGuest}
-          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition ${
+          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition shrink-0 ${
             isGuest
               ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 hover:shadow-lg cursor-pointer'
@@ -291,9 +291,9 @@ const Tasks = () => {
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
         {/* Search Input */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -305,8 +305,8 @@ const Tasks = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Status:</span>
             {['All', ...TASK_STATUSES].map((status) => (
               <button
@@ -323,7 +323,7 @@ const Tasks = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Type:</span>
             {['All', ...TASK_TYPES].map((type) => (
               <button
@@ -365,7 +365,7 @@ const Tasks = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
           {filteredTasks.map((task) => {
             const style = getTypeStyle(task.type);
             const statusStyle = getStatusStyle(task.status || 'In Progress');
@@ -377,7 +377,7 @@ const Tasks = () => {
               >
                 <div className="p-5 space-y-3">
                   {/* Top line: Type pill + Status pill + relative due */}
-                  <div className="flex items-center justify-between gap-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${style.pill}`}>
                         {task.type}

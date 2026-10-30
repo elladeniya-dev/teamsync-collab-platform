@@ -239,13 +239,13 @@ const Team = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Team Directory</span>
             <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
-              {members.length} Members
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
             </span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">Manage team roles, real-time availability status, and workload</p>
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">Manage team roles, real-time availability status, and workload</p>
         </div>
 
         <button
@@ -261,7 +261,7 @@ const Team = () => {
             }
             setIsAdding(!isAdding);
           }}
-          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition ${
+          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition shrink-0 ${
             canManageMembers
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 hover:shadow-lg cursor-pointer'
               : 'bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed'
@@ -369,12 +369,12 @@ const Team = () => {
       )}
 
       {/* Search and Role Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="relative flex-1">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-0">
           <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Filter team by name, email, or role..."
+            placeholder="Search by name, email, or role..."
             className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -382,7 +382,7 @@ const Team = () => {
         </div>
 
         {/* Role Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 shrink-0">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Role:</span>
           {['All', 'Lead', 'Developer', 'Designer'].map((filterRole) => (
             <button
@@ -417,7 +417,7 @@ const Team = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
           {filteredMembers.map((member, idx) => {
             const taskCount = getMemberTaskCount(member.name);
             const statusConfig = getStatusStyle(member.status || 'Active');
@@ -427,8 +427,8 @@ const Team = () => {
                 key={member._id}
                 className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     <div
                       className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
                         idx
@@ -436,14 +436,14 @@ const Team = () => {
                     >
                       {member.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="text-base font-bold text-slate-900 leading-snug truncate">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-base font-bold text-slate-900 leading-snug truncate" title={member.name}>
                         {member.name}
                       </h4>
-                      <p className="text-xs text-indigo-600 font-medium truncate">
+                      <p className="text-xs text-indigo-600 font-medium truncate" title={member.role || 'Fullstack Engineer'}>
                         {member.role || 'Fullstack Engineer'}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[170px]">
+                      <p className="text-xs text-slate-400 mt-0.5 truncate" title={member.email}>
                         {member.email}
                       </p>
                     </div>
@@ -468,9 +468,9 @@ const Team = () => {
                 </div>
 
                 {/* Footer: Dynamic Status Switcher + Task Count */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs gap-2">
                   {/* Interactive Status Selector */}
-                  <div className="relative group">
+                  <div className="relative group shrink-0">
                     <select
                       value={member.status || 'Active'}
                       onChange={(e) => handleStatusChange(member._id, member.name, e.target.value)}
@@ -487,7 +487,7 @@ const Team = () => {
                     <span className={`w-2 h-2 rounded-full absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none ${statusConfig.dot}`}></span>
                   </div>
 
-                  <span className="text-slate-500 font-medium">
+                  <span className="text-slate-500 font-medium truncate text-right">
                     <strong className="text-slate-900 font-semibold">{taskCount}</strong> assigned {taskCount === 1 ? 'task' : 'tasks'}
                   </span>
                 </div>
