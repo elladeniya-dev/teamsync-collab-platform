@@ -441,7 +441,7 @@ const Team = () => {
                         <h4 className="text-base font-bold text-slate-900 leading-snug truncate" title={member.name}>
                           {member.name}
                         </h4>
-                        {(member.email === user?.email || member.name === user?.name) && (
+                        {Boolean(user?.email && member.email?.toLowerCase() === user.email.toLowerCase()) && (
                           <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md">
                             You
                           </span>
