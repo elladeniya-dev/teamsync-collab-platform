@@ -11,6 +11,8 @@ export const TEAM_ROLES = [
   'Product Manager',
 ];
 
+export const ACCESS_ROLES = ['Owner', 'Admin', 'Member', 'Guest'];
+
 export const TEAM_STATUSES = [
   'Active',
   'In a Meeting',
@@ -35,6 +37,22 @@ const teamMemberSchema = new mongoose.Schema(
       type: String,
       enum: TEAM_ROLES,
       default: 'Fullstack Engineer',
+    },
+    accessRole: {
+      type: String,
+      enum: [
+        'Owner', 'Admin', 'Member', 'Guest',
+        'owner', 'admin', 'member', 'guest'
+      ],
+      set: (r) => {
+        if (!r) return 'Member';
+        const lower = String(r).toLowerCase();
+        if (lower === 'owner') return 'Owner';
+        if (lower === 'admin') return 'Admin';
+        if (lower === 'guest') return 'Guest';
+        return 'Member';
+      },
+      default: 'Member',
     },
     status: {
       type: String,

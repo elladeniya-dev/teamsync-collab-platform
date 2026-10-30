@@ -4,6 +4,7 @@ import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 import { broadcastEvent } from '../socket/socketManager.js';
 import { recordAuditLog } from './auditService.js';
+import { normalizeRole } from '../middlewares/rbacMiddleware.js';
 
 /**
  * Automatically reconciles registered User accounts into the TeamMember collection
@@ -31,6 +32,7 @@ export const syncUsersWithTeamMembers = async (retries = 2) => {
             name: u.name || normalizedEmail.split('@')[0],
             email: normalizedEmail,
             role: teamRole,
+            accessRole: normalizeRole(u.role),
             status: 'Active',
             avatar: u.avatar || '',
           });
@@ -40,6 +42,10 @@ export const syncUsersWithTeamMembers = async (retries = 2) => {
           let updated = false;
           if (u.avatar && !existing.avatar) {
             existing.avatar = u.avatar;
+            updated = true;
+          }
+          if (u.role && existing.accessRole !== normalizeRole(u.role)) {
+            existing.accessRole = normalizeRole(u.role);
             updated = true;
           }
           if (updated) {
@@ -115,43 +121,96 @@ export const createMember = async (memberData, auditContext = {}) => {
 };
 
 export const updateMember = async (id, updateData, auditContext = {}) => {
+  const current = await TeamMember.findById(id);
+  if (!current) {
+    throw new ApiError(404, `Team member not found with id: ${id}`);
+  }
+
+  let isRoleChange = false;
+  let previousAccessRole = current.accessRole;
+
+  if (updateData.accessRole) {
+    const newAccessRole = normalizeRole(updateData.accessRole);
+    updateData.accessRole = newAccessRole;
+
+    const actorRole = auditContext.actor ? normalizeRole(auditContext.actor.role) : 'Owner';
+    if (actorRole !== 'Owner' && actorRole !== 'Admin') {
+      throw new ApiError(403, 'Only Workspace Owners and Admins can modify member access roles');
+    }
+
+    if (newAccessRole === 'Owner' && actorRole !== 'Owner') {
+      throw new ApiError(403, 'Only the Workspace Owner can appoint or transfer Owner permissions');
+    }
+
+    if (current.accessRole === 'Owner' && actorRole !== 'Owner') {
+      throw new ApiError(403, 'Only the Workspace Owner can modify an Owner account');
+    }
+
+    if (newAccessRole !== current.accessRole) {
+      isRoleChange = true;
+      // Synchronize with User account if registered
+      if (current.email) {
+        await User.findOneAndUpdate(
+          { email: current.email.toLowerCase().trim() },
+          { role: newAccessRole }
+        );
+      }
+    }
+  }
+
   const member = await TeamMember.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
   });
-
-  if (!member) {
-    throw new ApiError(404, `Team member not found with id: ${id}`);
-  }
 
   // Broadcast WebSocket update
   broadcastEvent('team:updated', member);
 
   // Record immutable audit log
   if (auditContext.actor) {
-    await recordAuditLog({
-      actor: auditContext.actor,
-      action: 'MEMBER_UPDATE',
-      resourceType: 'TeamMember',
-      resourceId: String(member._id),
-      details: {
-        name: member.name,
-        updatedFields: Object.keys(updateData),
-        status: member.status,
-        role: member.role,
-      },
-      ipAddress: auditContext.ipAddress,
-      userAgent: auditContext.userAgent,
-      status: 'SUCCESS',
-    });
+    if (isRoleChange) {
+      await recordAuditLog({
+        actor: auditContext.actor,
+        action: 'ROLE_CHANGE',
+        resourceType: 'User',
+        resourceId: String(member._id),
+        details: {
+          targetUserName: member.name,
+          targetUserEmail: member.email,
+          previousRole: previousAccessRole,
+          newRole: member.accessRole,
+        },
+        ipAddress: auditContext.ipAddress,
+        userAgent: auditContext.userAgent,
+        status: 'SUCCESS',
+      });
+    } else {
+      await recordAuditLog({
+        actor: auditContext.actor,
+        action: 'MEMBER_UPDATE',
+        resourceType: 'TeamMember',
+        resourceId: String(member._id),
+        details: {
+          name: member.name,
+          updatedFields: Object.keys(updateData),
+          status: member.status,
+          role: member.role,
+        },
+        ipAddress: auditContext.ipAddress,
+        userAgent: auditContext.userAgent,
+        status: 'SUCCESS',
+      });
+    }
   }
 
   try {
     const notif = await Notification.create({
-      title: 'Collaborator Profile Updated',
-      message: `${member.name} is now ${member.status} as ${member.role}.`,
+      title: isRoleChange ? 'Access Role Updated' : 'Collaborator Profile Updated',
+      message: isRoleChange
+        ? `${member.name}'s access role was updated to ${member.accessRole}.`
+        : `${member.name} is now ${member.status} as ${member.role}.`,
       type: 'team',
-      priority: 'low',
+      priority: isRoleChange ? 'medium' : 'low',
       link: '/team',
       metadata: { memberId: member._id.toString() },
     });
