@@ -39,14 +39,38 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'member'],
-      default: 'member',
+      enum: ['Owner', 'Admin', 'Member', 'Guest', 'admin', 'member'],
+      default: 'Member',
     },
   },
   {
     timestamps: true,
   }
 );
+
+// Normalize role capitalization and automatically grant Owner to first registered user
+userSchema.pre('save', async function (next) {
+  if (this.role) {
+    if (this.role.toLowerCase() === 'owner') this.role = 'Owner';
+    else if (this.role.toLowerCase() === 'admin') this.role = 'Admin';
+    else if (this.role.toLowerCase() === 'guest') this.role = 'Guest';
+    else this.role = 'Member';
+  }
+
+  // If first user in system, automatically promote to Owner
+  if (this.isNew) {
+    try {
+      const userCount = await mongoose.models.User.countDocuments();
+      if (userCount === 0) {
+        this.role = 'Owner';
+      }
+    } catch {
+      // Fallback to default if count check fails
+    }
+  }
+
+  next();
+});
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

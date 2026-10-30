@@ -50,3 +50,29 @@ export const getMe = asyncHandler(async (req, res) => {
     user,
   });
 });
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await authService.getAllUsersService();
+  res.status(200).json({
+    success: true,
+    users,
+  });
+});
+
+export const updateUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  if (!role) {
+    throw new ApiError(400, 'Role is required');
+  }
+
+  const updatedUser = await authService.updateUserRoleService({
+    actor: req.user,
+    targetUserId: req.params.id,
+    newRole: role,
+  });
+
+  res.status(200).json({
+    success: true,
+    user: updatedUser,
+  });
+});

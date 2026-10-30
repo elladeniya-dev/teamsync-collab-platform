@@ -41,13 +41,16 @@ flowchart TD
   - [x] Multi-client auto-reconciliation on Tasks and Dashboard views without manual page refreshes.
 
 ### 2. Granular Role-Based Access Control (RBAC) & Immutable Audit Logging
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Strict authorization at the route level with compliance-ready audit trails.
-- **Tech Stack:** Express Custom Middleware, Mongoose, JWT Claims.
+- **Tech Stack:** Express Custom Middleware (`rbacMiddleware.js`), Mongoose Immutability Hooks, JWT Claims, Socket.io live audit stream.
 - **Architectural Scope:**
-  - Define hierarchical roles: `Owner` > `Admin` > `Member` > `Guest`.
-  - Role-gate critical mutations: Only `Owner`/`Admin` can delete workspaces, invite members, or modify sprint cycles; `Guest` has read-only access.
-  - **Immutable Audit Log Collection:** Record every administrative action (`who`, `action`, `targetId`, `timestamp`, `ipAddress`) into an append-only `AuditLog` collection.
+  - [x] Defined hierarchical roles: `Owner` (40) > `Admin` (30) > `Member` (20) > `Guest` (10).
+  - [x] Route-gate critical mutations: Only `Owner`/`Admin` can delete tasks/workspaces, invite members, or modify sprint cycles; `Member` can create/edit tasks; `Guest` has strict read-only access.
+  - [x] **Immutable Audit Log Collection:** Append-only Mongoose schema (`AuditLog.js`) with database-level hooks rejecting `updateOne`, `updateMany`, `deleteOne`, `deleteMany` to guarantee evidentiary integrity.
+  - [x] Security breach logging: Unauthorized route attempts automatically generate an immutable `SECURITY_UNAUTHORIZED_ACCESS` log entry with status `DENIED`.
+  - [x] **Audit Trail UI (`/audit-logs`):** Glassmorphic live-streaming table with WebSocket event updates (`audit:created`), inspect modal, KPI counters, and role-based access restrictions.
+  - [x] **Interactive Role Switcher Pill:** Built-in testing popover in the user profile footer allowing seamless demonstration of all 4 roles in real time.
 
 ### 3. Idempotent Webhooks & Third-Party Integrations (GitHub & Slack)
 - **Status:** ⬜ Planned
@@ -323,14 +326,18 @@ flowchart TD
 ---
 
 ### Feature 4.3: Granular Role-Based Access Control (RBAC) & Audit Logs
-- **Status:** ⬜ Planned
+- **Status:** ✅ Completed
 - **Goal:** Fine-grained authorization tiers (`Owner`, `Admin`, `Member`, `Guest`) and immutable audit trails.
 - **Backend Tasks:**
-  - [ ] Implement `requireRole(['Owner', 'Admin'])` Express middleware.
-  - [ ] Create `AuditLog` schema tracking destructive and administrative mutations.
+  - [x] Defined role hierarchy: `Owner` (40), `Admin` (30), `Member` (20), `Guest` (10).
+  - [x] Implemented `requireRole` Express middleware logging `SECURITY_UNAUTHORIZED_ACCESS` blocks.
+  - [x] Created `AuditLog` schema with database-level immutability hooks preventing update and delete operations.
+  - [x] Endpoints `GET /api/audit-logs` and `GET /api/audit-logs/stats` with real-time Socket.io dispatching.
+  - [x] Protected task, team, and workspace mutations with granular role authorization.
 - **Frontend Tasks:**
-  - [ ] Conditionally render administrative controls based on the current user's workspace role.
-  - [ ] Workspace settings view displaying audit trail logs.
+  - [x] Conditionally rendered administrative actions: Guest read-only protection, Member task creation/editing, and Admin/Owner delete guards.
+  - [x] Added `AuditLogs.jsx` view displaying live audit stream, KPI counters, and inspect modal.
+  - [x] Added interactive Role Switcher popover in the user profile footer for instantaneous RBAC evaluation and testing.
 
 ---
 

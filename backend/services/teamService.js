@@ -2,6 +2,7 @@ import TeamMember from '../models/TeamMember.js';
 import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 import { broadcastEvent } from '../socket/socketManager.js';
+import { recordAuditLog } from './auditService.js';
 
 export const getAllMembers = async () => {
   return await TeamMember.find().sort({ createdAt: -1 });
@@ -15,11 +16,30 @@ export const getMemberById = async (id) => {
   return member;
 };
 
-export const createMember = async (memberData) => {
+export const createMember = async (memberData, auditContext = {}) => {
   const member = await TeamMember.create(memberData);
 
   // Broadcast WebSocket update
   broadcastEvent('team:created', member);
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'MEMBER_CREATE',
+      resourceType: 'TeamMember',
+      resourceId: String(member._id),
+      details: {
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        status: member.status,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({
@@ -38,7 +58,7 @@ export const createMember = async (memberData) => {
   return member;
 };
 
-export const updateMember = async (id, updateData) => {
+export const updateMember = async (id, updateData, auditContext = {}) => {
   const member = await TeamMember.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
@@ -50,6 +70,25 @@ export const updateMember = async (id, updateData) => {
 
   // Broadcast WebSocket update
   broadcastEvent('team:updated', member);
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'MEMBER_UPDATE',
+      resourceType: 'TeamMember',
+      resourceId: String(member._id),
+      details: {
+        name: member.name,
+        updatedFields: Object.keys(updateData),
+        status: member.status,
+        role: member.role,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({
@@ -68,7 +107,7 @@ export const updateMember = async (id, updateData) => {
   return member;
 };
 
-export const deleteMember = async (id) => {
+export const deleteMember = async (id, auditContext = {}) => {
   const member = await TeamMember.findByIdAndDelete(id);
   if (!member) {
     throw new ApiError(404, `Team member not found with id: ${id}`);
@@ -76,6 +115,24 @@ export const deleteMember = async (id) => {
 
   // Broadcast WebSocket update
   broadcastEvent('team:deleted', { id });
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'MEMBER_DELETE',
+      resourceType: 'TeamMember',
+      resourceId: String(id),
+      details: {
+        name: member.name,
+        email: member.email,
+        role: member.role,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({

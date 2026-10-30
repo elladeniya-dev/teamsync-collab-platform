@@ -4,24 +4,24 @@ import {
   createTask,
   updateTask,
   deleteTask,
-  getTaskById
+  getTaskById,
 } from '../controllers/taskController.js';
+import { protect } from '../middlewares/authMiddleware.js';
+import { requireRole } from '../middlewares/rbacMiddleware.js';
 
 const router = express.Router();
 
-// Read all tasks
+// Read tasks (accessible to all authenticated or public)
 router.get('/', getTasks);
-
-// Read one task by ID
 router.get('/:id', getTaskById);
 
-// Create new task
-router.post('/', createTask);
+// Create task: Owner, Admin, Member (Guest denied)
+router.post('/', protect, requireRole(['Owner', 'Admin', 'Member']), createTask);
 
-// Update task by ID
-router.put('/:id', updateTask);
+// Update task: Owner, Admin, Member (Guest denied)
+router.put('/:id', protect, requireRole(['Owner', 'Admin', 'Member']), updateTask);
 
-// Delete task by ID
-router.delete('/:id', deleteTask);
+// Delete task: Owner, Admin only (Member and Guest denied)
+router.delete('/:id', protect, requireRole(['Owner', 'Admin']), deleteTask);
 
 export default router;

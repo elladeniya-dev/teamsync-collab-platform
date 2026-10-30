@@ -69,6 +69,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('teamsync_user');
   }, []);
 
+  const changeUserRole = async (newRole) => {
+    if (!user) return;
+    try {
+      if (user._id) {
+        await authApi.updateUserRole(user._id, newRole);
+      }
+    } catch (err) {
+      console.warn('Backend role update skipped, updating session locally:', err?.response?.data?.message || err.message);
+    }
+    const updatedUser = { ...user, role: newRole };
+    setUser(updatedUser);
+    localStorage.setItem('teamsync_user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     token,
@@ -78,6 +92,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    changeUserRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

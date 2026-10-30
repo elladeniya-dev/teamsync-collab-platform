@@ -8,13 +8,15 @@ import {
   LayersIcon,
   PlusIcon,
   CheckIcon,
-  XIcon
+  XIcon,
+  ShieldIcon,
+  LockIcon
 } from '../common/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, changeUserRole } = useAuth();
   const { 
     workspaces, 
     activeWorkspace, 
@@ -27,28 +29,32 @@ const Sidebar = () => {
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [newSprintName, setNewSprintName] = useState('Sprint 1');
+  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const roleMenuRef = useRef(null);
 
   const navItems = [
     { to: '/', label: 'Dashboard', icon: DashboardIcon },
     { to: '/tasks', label: 'Tasks', icon: TasksIcon },
     { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
     { to: '/team', label: 'My Team', icon: TeamIcon },
+    { to: '/audit-logs', label: 'Audit Logs', icon: ShieldIcon, badge: 'RBAC' },
   ];
 
-  // Close workspace dropdown on outside click
+  // Close workspace and role dropdowns on outside click
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setIsWorkspaceMenuOpen(false);
         setIsCreatingWorkspace(false);
       }
+      if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
+        setIsRoleMenuOpen(false);
+      }
     };
-    if (isWorkspaceMenuOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
+    document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isWorkspaceMenuOpen]);
+  }, []);
 
   const handleCreateWorkspace = async (e) => {
     e.preventDefault();
@@ -255,7 +261,7 @@ const Sidebar = () => {
                   to={item.to}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group ${
                       isActive
                         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
@@ -265,7 +271,16 @@ const Sidebar = () => {
                   {({ isActive }) => (
                     <>
                       <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge && (
+                        <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${
+                          isActive
+                            ? 'bg-white/20 text-white border-white/30'
+                            : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
                     </>
                   )}
                 </NavLink>
@@ -275,10 +290,63 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* User Profile Footer */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-900/50 shrink-0">
+      {/* User Profile Footer with Granular Role Switcher */}
+      <div className="p-4 border-t border-slate-800/80 bg-slate-900/50 shrink-0 relative" ref={roleMenuRef}>
+        {/* Role Switcher Popover */}
+        {isRoleMenuOpen && (
+          <div className="absolute left-4 right-4 bottom-20 z-50 bg-slate-950 border border-slate-700/80 rounded-2xl shadow-2xl p-3 space-y-2 animate-fadeIn">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                Switch Role (RBAC Demo)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsRoleMenuOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                title="Close"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Test how route protections, button guards, and audit logs adapt across each tier:
+            </p>
+            <div className="space-y-1">
+              {[
+                { id: 'Owner', desc: 'Full workspace authority & audit logs' },
+                { id: 'Admin', desc: 'Manage team, tasks & audit logs' },
+                { id: 'Member', desc: 'Standard task creation & edits' },
+                { id: 'Guest', desc: 'Strict read-only viewer' },
+              ].map((r) => {
+                const isActive = (user?.role || 'Member').toLowerCase() === r.id.toLowerCase();
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      changeUserRole(r.id);
+                      setIsRoleMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2 rounded-xl transition flex items-center justify-between text-xs cursor-pointer ${
+                      isActive
+                        ? 'bg-indigo-600/30 border border-indigo-500/50 text-white'
+                        : 'hover:bg-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <span className="font-bold text-xs block">{r.id}</span>
+                      <span className="text-[10px] text-slate-400 block">{r.desc}</span>
+                    </div>
+                    {isActive && <CheckIcon className="w-3.5 h-3.5 text-indigo-400" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40 border border-slate-800/80">
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0 pr-1">
             <div className="relative shrink-0">
               {user?.avatar ? (
                 <img
@@ -295,16 +363,26 @@ const Sidebar = () => {
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900"></span>
             </div>
 
-            <div className="overflow-hidden min-w-0">
+            <div className="overflow-hidden min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">{user?.name || 'Workspace User'}</p>
-              <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Authenticated'}</p>
+              
+              {/* Clickable Role Pill to Toggle Switcher */}
+              <button
+                type="button"
+                onClick={() => setIsRoleMenuOpen(!isRoleMenuOpen)}
+                className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 transition cursor-pointer"
+                title="Click to switch workspace role for testing"
+              >
+                <span>{user?.role || 'Member'}</span>
+                <span className="text-[8px] text-indigo-400">▾</span>
+              </button>
             </div>
           </div>
 
           {/* Logout Button */}
           <button
             onClick={logout}
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition shrink-0 ml-2 cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition shrink-0 ml-1 cursor-pointer"
             title="Sign Out"
             aria-label="Sign Out"
           >

@@ -2,6 +2,7 @@ import Task from '../models/Task.js';
 import Notification from '../models/Notification.js';
 import { ApiError } from '../utils/ApiError.js';
 import { broadcastEvent } from '../socket/socketManager.js';
+import { recordAuditLog } from './auditService.js';
 
 export const getAllTasks = async () => {
   return await Task.find().sort({ deadline: 1 });
@@ -15,11 +16,30 @@ export const getTaskById = async (id) => {
   return task;
 };
 
-export const createTask = async (taskData) => {
+export const createTask = async (taskData, auditContext = {}) => {
   const task = await Task.create(taskData);
 
   // Broadcast real-time WebSocket event
   broadcastEvent('task:created', task);
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'TASK_CREATE',
+      resourceType: 'Task',
+      resourceId: String(task._id),
+      details: {
+        title: task.title,
+        type: task.type,
+        assignee: task.assignee,
+        deadline: task.deadline,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({
@@ -38,7 +58,7 @@ export const createTask = async (taskData) => {
   return task;
 };
 
-export const updateTask = async (id, updateData) => {
+export const updateTask = async (id, updateData, auditContext = {}) => {
   const task = await Task.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
@@ -49,6 +69,23 @@ export const updateTask = async (id, updateData) => {
 
   // Broadcast real-time WebSocket event
   broadcastEvent('task:updated', task);
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'TASK_UPDATE',
+      resourceType: 'Task',
+      resourceId: String(task._id),
+      details: {
+        title: task.title,
+        updatedFields: Object.keys(updateData),
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({
@@ -67,7 +104,7 @@ export const updateTask = async (id, updateData) => {
   return task;
 };
 
-export const deleteTask = async (id) => {
+export const deleteTask = async (id, auditContext = {}) => {
   const task = await Task.findByIdAndDelete(id);
   if (!task) {
     throw new ApiError(404, `Task not found with id: ${id}`);
@@ -75,6 +112,23 @@ export const deleteTask = async (id) => {
 
   // Broadcast real-time WebSocket event
   broadcastEvent('task:deleted', { id });
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'TASK_DELETE',
+      resourceType: 'Task',
+      resourceId: String(id),
+      details: {
+        title: task.title,
+        assignee: task.assignee,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
 
   try {
     const notif = await Notification.create({

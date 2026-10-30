@@ -9,14 +9,17 @@ import {
   EditIcon, 
   ClockIcon, 
   CalendarIcon,
-  CheckCircleIcon 
+  CheckCircleIcon,
+  LockIcon
 } from '../components';
 import { formatDate, getRelativeDeadline } from '../utils/dateUtils';
 import { getTypeStyle, TASK_TYPES } from '../utils/taskHelpers';
 import dayjs from 'dayjs';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 
 const Tasks = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +27,9 @@ const Tasks = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
   const { socket, announceViewChange } = useSocket();
+
+  const isGuest = user?.role?.toLowerCase() === 'guest';
+  const canDelete = user?.role?.toLowerCase() === 'owner' || user?.role?.toLowerCase() === 'admin';
   
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -254,10 +260,16 @@ const Tasks = () => {
 
         <button
           onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition cursor-pointer"
+          disabled={isGuest}
+          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition ${
+            isGuest
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 hover:shadow-lg cursor-pointer'
+          }`}
+          title={isGuest ? 'Guests have read-only access to deliverables' : 'Add New Task'}
         >
-          <PlusIcon className="w-4 h-4" />
-          <span>Add New Task</span>
+          {isGuest ? <LockIcon className="w-4 h-4 text-slate-400" /> : <PlusIcon className="w-4 h-4" />}
+          <span>{isGuest ? 'Read-Only (Guest)' : 'Add New Task'}</span>
         </button>
       </div>
 
@@ -366,20 +378,39 @@ const Tasks = () => {
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleOpenEdit(task)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
-                      title="Edit task"
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(task._id, task.title)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                      title="Delete task"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
+                    {!isGuest ? (
+                      <button
+                        onClick={() => handleOpenEdit(task)}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
+                        title="Edit task"
+                      >
+                        <EditIcon className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <span
+                        className="p-1.5 text-slate-300 cursor-not-allowed"
+                        title="Read-only: Guests cannot edit tasks"
+                      >
+                        <LockIcon className="w-3.5 h-3.5 text-slate-300" />
+                      </span>
+                    )}
+
+                    {canDelete ? (
+                      <button
+                        onClick={() => handleDelete(task._id, task.title)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Delete task"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <span
+                        className="p-1.5 text-slate-300 cursor-not-allowed"
+                        title="Delete requires Admin or Owner role"
+                      >
+                        <LockIcon className="w-3.5 h-3.5 text-slate-300" />
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

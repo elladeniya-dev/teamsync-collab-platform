@@ -12,16 +12,34 @@ export const getMemberById = asyncHandler(async (req, res) => {
 });
 
 export const addMember = asyncHandler(async (req, res) => {
-  const member = await teamService.createMember(req.body);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const member = await teamService.createMember(req.body, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(201).json(member);
 });
 
 export const updateMember = asyncHandler(async (req, res) => {
-  const member = await teamService.updateMember(req.params.id, req.body);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const member = await teamService.updateMember(req.params.id, req.body, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(200).json(member);
 });
 
 export const removeMember = asyncHandler(async (req, res) => {
-  await teamService.deleteMember(req.params.id);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  await teamService.deleteMember(req.params.id, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(200).json({ success: true, message: 'Member removed successfully' });
 });

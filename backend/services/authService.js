@@ -2,6 +2,8 @@ import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateToken } from '../utils/generateToken.js';
+import { recordAuditLog } from './auditService.js';
+import { normalizeRole } from '../middlewares/rbacMiddleware.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -65,6 +67,16 @@ export const googleAuthService = async (credential) => {
 
   const token = generateToken(user._id);
 
+  // Record audit log
+  await recordAuditLog({
+    actor: { id: user._id, name: user.name, email: user.email, role: user.role },
+    action: user.isNew ? 'AUTH_REGISTER' : 'AUTH_LOGIN',
+    resourceType: 'Auth',
+    resourceId: String(user._id),
+    details: { method: 'Google OAuth', email: user.email },
+    status: 'SUCCESS',
+  });
+
   return {
     user: {
       _id: user._id,
@@ -97,6 +109,16 @@ export const registerUserService = async ({ name, email, password }) => {
   });
 
   const token = generateToken(user._id);
+
+  // Record audit log
+  await recordAuditLog({
+    actor: { id: user._id, name: user.name, email: user.email, role: user.role },
+    action: 'AUTH_REGISTER',
+    resourceType: 'Auth',
+    resourceId: String(user._id),
+    details: { method: 'Local Email/Password', email: user.email },
+    status: 'SUCCESS',
+  });
 
   return {
     user: {
@@ -139,6 +161,16 @@ export const loginUserService = async ({ email, password }) => {
 
   const token = generateToken(user._id);
 
+  // Record audit log
+  await recordAuditLog({
+    actor: { id: user._id, name: user.name, email: user.email, role: user.role },
+    action: 'AUTH_LOGIN',
+    resourceType: 'Auth',
+    resourceId: String(user._id),
+    details: { method: 'Local Email/Password', email: user.email },
+    status: 'SUCCESS',
+  });
+
   return {
     user: {
       _id: user._id,
@@ -167,5 +199,69 @@ export const getMeService = async (userId) => {
     avatar: user.avatar,
     authProvider: user.authProvider,
     role: user.role,
+  };
+};
+
+/**
+ * Get all registered workspace users (Owner / Admin view)
+ */
+export const getAllUsersService = async () => {
+  const users = await User.find({}, 'name email role avatar authProvider createdAt').sort({
+    createdAt: 1,
+  });
+  return users;
+};
+
+/**
+ * Update a user's workspace role (Owner / Admin privileged)
+ */
+export const updateUserRoleService = async ({ actor, targetUserId, newRole }) => {
+  const normalizedNewRole = normalizeRole(newRole);
+  const actorRole = normalizeRole(actor.role);
+
+  // Restrict who can assign roles
+  if (actorRole !== 'Owner' && actorRole !== 'Admin') {
+    throw new ApiError(403, 'Only Workspace Owners and Admins can modify member roles');
+  }
+
+  // Only Owner can assign or modify an Owner
+  if (normalizedNewRole === 'Owner' && actorRole !== 'Owner') {
+    throw new ApiError(403, 'Only the Workspace Owner can transfer or appoint Owner permissions');
+  }
+
+  const targetUser = await User.findById(targetUserId);
+  if (!targetUser) {
+    throw new ApiError(404, 'Target user not found');
+  }
+
+  const oldRole = normalizeRole(targetUser.role);
+
+  if (oldRole === 'Owner' && actorRole !== 'Owner') {
+    throw new ApiError(403, 'Only the Workspace Owner can modify an Owner account');
+  }
+
+  targetUser.role = normalizedNewRole;
+  await targetUser.save();
+
+  // Record immutable audit log
+  await recordAuditLog({
+    actor,
+    action: 'ROLE_CHANGE',
+    resourceType: 'User',
+    resourceId: String(targetUser._id),
+    details: {
+      targetUserName: targetUser.name,
+      targetUserEmail: targetUser.email,
+      previousRole: oldRole,
+      newRole: normalizedNewRole,
+    },
+    status: 'SUCCESS',
+  });
+
+  return {
+    _id: targetUser._id,
+    name: targetUser.name,
+    email: targetUser.email,
+    role: targetUser.role,
   };
 };

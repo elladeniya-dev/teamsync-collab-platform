@@ -12,16 +12,34 @@ export const getTaskById = asyncHandler(async (req, res) => {
 });
 
 export const createTask = asyncHandler(async (req, res) => {
-  const task = await taskService.createTask(req.body);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.createTask(req.body, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(201).json(task);
 });
 
 export const updateTask = asyncHandler(async (req, res) => {
-  const task = await taskService.updateTask(req.params.id, req.body);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const task = await taskService.updateTask(req.params.id, req.body, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(200).json(task);
 });
 
 export const deleteTask = asyncHandler(async (req, res) => {
-  await taskService.deleteTask(req.params.id);
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  await taskService.deleteTask(req.params.id, {
+    actor: req.user,
+    ipAddress,
+    userAgent,
+  });
   res.status(200).json({ success: true, message: 'Task deleted successfully' });
 });

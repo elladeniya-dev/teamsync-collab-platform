@@ -7,8 +7,10 @@ import {
   TrashIcon, 
   SearchIcon,
   CheckCircleIcon,
-  EditIcon
+  EditIcon,
+  LockIcon
 } from '../components';
+import { useAuth } from '../context/AuthContext';
 
 export const TEAM_ROLES = [
   'Project Lead',
@@ -55,6 +57,7 @@ export const getStatusStyle = (status) => {
 };
 
 const Team = () => {
+  const { user } = useAuth();
   const [members, setMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [newMember, setNewMember] = useState({
@@ -67,6 +70,9 @@ const Team = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState('All');
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const canManageMembers =
+    user?.role?.toLowerCase() === 'owner' || user?.role?.toLowerCase() === 'admin';
 
   useEffect(() => {
     fetchData();
@@ -243,11 +249,27 @@ const Team = () => {
         </div>
 
         <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition cursor-pointer"
+          onClick={() => {
+            if (!canManageMembers) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Permission Denied',
+                text: 'Only Workspace Owners and Administrators can invite new team members.',
+                confirmButtonColor: '#4f46e5',
+              });
+              return;
+            }
+            setIsAdding(!isAdding);
+          }}
+          className={`flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition ${
+            canManageMembers
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 hover:shadow-lg cursor-pointer'
+              : 'bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed'
+          }`}
+          title={canManageMembers ? 'Invite Member' : 'Admin or Owner privileges required'}
         >
-          <PlusIcon className="w-4 h-4" />
-          <span>{isAdding ? 'Close Form' : 'Invite Member'}</span>
+          {canManageMembers ? <PlusIcon className="w-4 h-4" /> : <LockIcon className="w-4 h-4" />}
+          <span>{canManageMembers ? (isAdding ? 'Close Form' : 'Invite Member') : 'Invite (Admin Only)'}</span>
         </button>
       </div>
 
@@ -427,13 +449,22 @@ const Team = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleRemove(member._id, member.name)}
-                    className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer shrink-0"
-                    title="Remove member"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
+                  {canManageMembers ? (
+                    <button
+                      onClick={() => handleRemove(member._id, member.name)}
+                      className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer shrink-0"
+                      title="Remove member"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <span
+                      className="p-1.5 text-slate-300 cursor-not-allowed shrink-0"
+                      title="Only Workspace Owners and Admins can remove collaborators"
+                    >
+                      <LockIcon className="w-3.5 h-3.5 text-slate-300" />
+                    </span>
+                  )}
                 </div>
 
                 {/* Footer: Dynamic Status Switcher + Task Count */}

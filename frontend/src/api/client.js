@@ -37,12 +37,14 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Authentication API
+// Authentication & User Management API
 export const authApi = {
   googleAuth: (credential) => apiClient.post('/api/auth/google', { credential }),
   register: (userData) => apiClient.post('/api/auth/register', userData),
   login: (credentials) => apiClient.post('/api/auth/login', credentials),
   getMe: () => apiClient.get('/api/auth/me'),
+  getAllUsers: () => apiClient.get('/api/auth/users'),
+  updateUserRole: (id, role) => apiClient.patch(`/api/auth/users/${id}/role`, { role }),
 };
 
 // Tasks API
@@ -77,6 +79,12 @@ export const workspaceApi = {
   create: (data) => apiClient.post('/api/workspaces', data),
   update: (id, data) => apiClient.put(`/api/workspaces/${id}`, data),
   delete: (id) => apiClient.delete(`/api/workspaces/${id}`),
+};
+
+// Immutable Audit Log API
+export const auditApi = {
+  getAll: (params) => apiClient.get('/api/audit-logs', { params }),
+  getStats: () => apiClient.get('/api/audit-logs/stats'),
 };
 
 export default apiClient;
