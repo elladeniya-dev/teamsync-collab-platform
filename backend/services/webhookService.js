@@ -248,7 +248,7 @@ export const processGitHubWebhook = async ({
             _id: matchedTask._id,
             title: matchedTask.title,
             status: matchedTask.status,
-            githubPrNumber,
+            githubPrNumber: prNumber,
           },
           summary,
         };
