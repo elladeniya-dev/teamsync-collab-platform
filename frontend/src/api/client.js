@@ -86,6 +86,8 @@ export const workspaceApi = {
   create: (data) => apiClient.post('/api/workspaces', data),
   update: (id, data) => apiClient.put(`/api/workspaces/${id}`, data),
   delete: (id) => apiClient.delete(`/api/workspaces/${id}`),
+  removeSprint: (id, sprintName) =>
+    apiClient.delete(`/api/workspaces/${id}/sprints/${encodeURIComponent(sprintName)}`),
 };
 
 // Immutable Audit Log API

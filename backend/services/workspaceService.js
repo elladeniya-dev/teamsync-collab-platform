@@ -161,3 +161,69 @@ export const deleteWorkspace = async (id, auditContext = {}) => {
 
   return workspace;
 };
+
+
+export const removeSprintFromWorkspace = async (workspaceId, sprintName, auditContext = {}) => {
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new ApiError(404, `Workspace not found with id: ${workspaceId}`);
+  }
+
+  if (!workspace.sprints || !workspace.sprints.includes(sprintName)) {
+    return workspace;
+  }
+
+  if (workspace.sprints.length <= 1) {
+    throw new ApiError(400, 'Cannot remove the last remaining sprint cycle.');
+  }
+
+  const previousSprint = workspace.currentSprint;
+  workspace.sprints = workspace.sprints.filter((s) => s !== sprintName);
+
+  let sprintChanged = false;
+  if (workspace.currentSprint === sprintName) {
+    workspace.currentSprint = workspace.sprints[0] || 'Sprint 1';
+    sprintChanged = true;
+  }
+
+  await workspace.save();
+
+  // Broadcast WebSocket update
+  broadcastEvent('workspace:updated', workspace);
+
+  // Record immutable audit log
+  if (auditContext.actor) {
+    await recordAuditLog({
+      actor: auditContext.actor,
+      action: 'SPRINT_DELETE',
+      resourceType: 'Workspace',
+      resourceId: String(workspace._id),
+      details: {
+        name: workspace.name,
+        removedSprint: sprintName,
+        previousCurrentSprint: previousSprint,
+        currentSprint: workspace.currentSprint,
+      },
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      status: 'SUCCESS',
+    });
+  }
+
+  if (sprintChanged) {
+    try {
+      const notif = await Notification.create({
+        title: 'Active Sprint Updated',
+        message: `Sprint "${sprintName}" was removed. Workspace "${workspace.name}" transitioned to ${workspace.currentSprint}.`,
+        type: 'task',
+        priority: 'medium',
+        link: '/tasks',
+      });
+      broadcastEvent('notification:new', notif);
+    } catch (err) {
+      console.warn('Could not record notification for sprint removal:', err.message);
+    }
+  }
+
+  return workspace;
+};

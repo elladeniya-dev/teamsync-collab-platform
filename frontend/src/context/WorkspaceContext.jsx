@@ -111,6 +111,26 @@ export const WorkspaceProvider = ({ children }) => {
     }
   };
 
+  const removeSprint = async (workspaceId, sprintName) => {
+    try {
+      const res = await workspaceApi.removeSprint(workspaceId, sprintName);
+      const updated = res.data;
+
+      setWorkspaces((prev) =>
+        prev.map((w) => (w._id === workspaceId ? updated : w))
+      );
+
+      if (activeWorkspace?._id === workspaceId) {
+        setActiveWorkspace(updated);
+        localStorage.setItem('teamsync_active_workspace', JSON.stringify(updated));
+      }
+      return updated;
+    } catch (err) {
+      console.error('Failed to remove sprint:', err);
+      throw err;
+    }
+  };
+
   const value = {
     workspaces,
     activeWorkspace,
@@ -120,6 +140,7 @@ export const WorkspaceProvider = ({ children }) => {
     changeCurrentSprint,
     createNewWorkspace,
     deleteWorkspace,
+    removeSprint,
   };
 
   return (

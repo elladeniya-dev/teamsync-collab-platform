@@ -43,3 +43,19 @@ export const deleteWorkspace = asyncHandler(async (req, res) => {
   });
   res.status(200).json({ success: true, message: 'Workspace deleted successfully' });
 });
+
+
+export const removeSprint = asyncHandler(async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown Client';
+  const workspace = await workspaceService.removeSprintFromWorkspace(
+    req.params.id,
+    decodeURIComponent(req.params.sprintName),
+    {
+      actor: req.user,
+      ipAddress,
+      userAgent,
+    }
+  );
+  res.status(200).json(workspace);
+});

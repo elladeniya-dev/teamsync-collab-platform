@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { 
   DashboardIcon, 
   TasksIcon, 
@@ -25,7 +26,8 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     activeWorkspace, 
     switchWorkspace, 
     changeCurrentSprint, 
-    createNewWorkspace 
+    createNewWorkspace,
+    removeSprint,
   } = useWorkspace();
 
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
@@ -83,6 +85,55 @@ const Sidebar = ({ isOpen = false, onClose }) => {
       await changeCurrentSprint(activeWorkspace._id, sprint);
     } catch (err) {
       console.error('Error updating sprint:', err);
+    }
+  };
+
+  const handleRemoveSprint = async (sprintName) => {
+    if (!activeWorkspace) return;
+    if ((activeWorkspace.sprints || []).length <= 1) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Action Prohibited',
+        text: 'A workspace must retain at least one active sprint cycle.',
+        background: '#0f172a',
+        color: '#f8fafc',
+      });
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      title: `Remove "${sprintName}"?`,
+      text: `Are you sure you want to remove ${sprintName} from ${activeWorkspace.name}? Tasks will be preserved.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#475569',
+      confirmButtonText: 'Yes, remove',
+      background: '#0f172a',
+      color: '#f8fafc',
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await removeSprint(activeWorkspace._id, sprintName);
+        Swal.fire({
+          icon: 'success',
+          title: 'Sprint Removed',
+          text: `"${sprintName}" was successfully removed.`,
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#0f172a',
+          color: '#f8fafc',
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err?.response?.data?.message || 'Failed to remove sprint.',
+          background: '#0f172a',
+          color: '#f8fafc',
+        });
+      }
     }
   };
 
@@ -208,7 +259,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
 
               {/* Active Sprint Management Section */}
               {activeWorkspace && (
-                <div className="pt-2 border-t border-slate-800/90 space-y-1.5">
+                <div className="pt-2 border-t border-slate-800/90 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                       Active Sprint:
@@ -243,6 +294,55 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                       );
                     })()}
                   </select>
+
+                  {/* Sprint Cycles Chips with Remove Action */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Manage Cycles ({(activeWorkspace.sprints || []).length})
+                      </span>
+                      <span className="text-[9px] text-slate-500">Tap x to delete</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-0.5">
+                      {(activeWorkspace.sprints || []).map((sp) => {
+                        const isActive = sp === activeWorkspace.currentSprint;
+                        const canDelete = (activeWorkspace.sprints || []).length > 1;
+                        return (
+                          <div
+                            key={sp}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition ${
+                              isActive
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                : 'bg-slate-900/90 text-slate-300 border-slate-700/60 hover:bg-slate-800'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleSprintSelect(sp)}
+                              className="hover:underline cursor-pointer"
+                              title={`Switch to ${sp}`}
+                            >
+                              {sp}
+                            </button>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSprint(sp);
+                                }}
+                                className="text-slate-400 hover:text-rose-400 p-0.5 rounded hover:bg-slate-700/60 transition cursor-pointer ml-0.5"
+                                title={`Remove ${sp}`}
+                                aria-label={`Remove ${sp}`}
+                              >
+                                <XIcon className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
 
