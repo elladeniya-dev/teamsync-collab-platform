@@ -156,12 +156,33 @@ The React SPA will launch at `http://localhost:5173`.
 | `DELETE` | `/api/notifications/:id` | Dismiss a single notification |
 | `DELETE` | `/api/notifications` | Clear all notifications |
 
+### Workspaces & Sprints (`/api/workspaces`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/workspaces` | Get all workspaces (auto-seeds starter projects if empty) |
+| `GET` | `/api/workspaces/:id` | Get single workspace by ID |
+| `POST` | `/api/workspaces` | Create a new project workspace |
+| `PUT` | `/api/workspaces/:id` | Update workspace name or transition current sprint |
+| `DELETE` | `/api/workspaces/:id` | Remove a workspace |
+
 ---
 
-## 🗺️ Product Roadmap & Audit
-See [FEATURES.md](FEATURES.md) for the live vs. hardcoded feature audit and planned features including:
-- 📌 Interactive Drag-and-Drop Kanban Board (`To Do`, `In Progress`, `Under Review`, `Done`)
-- 📋 Subtasks & Verifiable Deliverable Checklists
-- ⚡ Instant Bidirectional WebSockets (Socket.io)
-- 🏢 Multi-Project & Multi-Sprint Switcher
-- 🤖 AI-Powered Sprint Planner & Standup Generator
+## 🌟 High-Impact Engineering Upgrades (Portfolio Showcase)
+
+Adding these engineering features transforms TeamSync into an enterprise-grade distributed system:
+
+1. **Real-Time Bidirectional Sync (`Socket.io`):** Instant multi-client deliverable synchronization, active collaborator presence indicators, and comment feeds.
+2. **Granular RBAC Middleware & Audit Logging:** Route-level permission boundaries (`Owner`, `Admin`, `Member`, `Guest`) paired with immutable audit trails.
+3. **Idempotent Webhook Engine:** Automated GitHub PR merge integration transitioning TeamSync tasks with SHA-256 signature verification.
+4. **Redis Caching & Sliding-Window Rate Limiting:** In-memory caching for dashboard aggregates and API abuse mitigation.
+5. **Automated Deadline Engine (BullMQ + Cron):** Distributed background worker queues dispatching automated reminder digests.
+6. **AI Sprint & Task Standup Summarizer:** LLM endpoint (Gemini API) generating executive sprint summaries and blocker digests.
+7. **Production DevOps Pipeline:** Multi-stage Dockerfiles, GitHub Actions CI/CD pipelines, and Swagger/OpenAPI specs.
+
+> **💼 Senior Engineer CV Bullet:**  
+> *Engineered a real-time team collaboration platform using React, Node.js, Express, and MongoDB, implementing WebSockets for live task synchronization, RBAC middleware for workspace security, and Redis caching to cut dashboard query latency.*
+
+---
+
+## 🗺️ Product Roadmap & Specifications
+See [FEATURES.md](FEATURES.md) for full architectural specifications, live vs. hardcoded system audit, and detailed implementation checklists.

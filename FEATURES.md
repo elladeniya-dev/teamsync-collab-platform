@@ -11,6 +11,94 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 
 ---
 
+## 🌟 High-Impact Senior Engineering Upgrades (Recruiter & Portfolio Showcase)
+
+Adding these engineering upgrades elevates TeamSync from a standard CRUD application into an enterprise-grade, senior-level distributed system:
+
+```mermaid
+flowchart TD
+    Client["React 19 Frontend Client"] -->|WebSocket Bi-directional Sync| SocketServer["Socket.io Gateway"]
+    Client -->|Sliding-Window Rate Limiter| Gateway["Express API Gateway"]
+    Gateway -->|RBAC Guard & Audit Logger| RouteHandler["Protected Controllers"]
+    RouteHandler -->|Cache-Aside Pattern| RedisCache[("Redis In-Memory Cache")]
+    RouteHandler -->|Mongoose ODM| MongoCluster[("MongoDB Atlas Cloud")]
+    GitHub["GitHub Pull Request Merged"] -->|Idempotent Webhook| WebhookEngine["Webhook Receiver"]
+    WebhookEngine --> RouteHandler
+    CronScheduler["BullMQ Worker"] -->|Scheduled Deadline Check| Queue[("Redis Job Queue")]
+    Queue --> NotificationDispatcher["Notification & Email Dispatcher"]
+    LLMService["Gemini API / LLM Engine"] -->|Standup Digest| RouteHandler
+```
+
+### 1. Real-Time Bidirectional Sync (`Socket.io` / WebSockets)
+- **Status:** ⬜ Planned
+- **Goal:** Instant multi-user live updates without page refreshing or background polling.
+- **Tech Stack:** `socket.io`, `socket.io-client`.
+- **Architectural Scope:**
+  - Establish persistent WebSocket connections upon user authentication.
+  - Broadcast room-scoped events: `task:created`, `task:moved`, `task:updated`, `task:deleted`, `member:status_change`.
+  - **Live Presence Indicators:** Display glowing collaborator presence badges ("Alex is currently viewing this sprint").
+  - Optimistic UI reconciliation with rollback handling on network failure.
+
+### 2. Granular Role-Based Access Control (RBAC) & Immutable Audit Logging
+- **Status:** ⬜ Planned
+- **Goal:** Strict authorization at the route level with compliance-ready audit trails.
+- **Tech Stack:** Express Custom Middleware, Mongoose, JWT Claims.
+- **Architectural Scope:**
+  - Define hierarchical roles: `Owner` > `Admin` > `Member` > `Guest`.
+  - Role-gate critical mutations: Only `Owner`/`Admin` can delete workspaces, invite members, or modify sprint cycles; `Guest` has read-only access.
+  - **Immutable Audit Log Collection:** Record every administrative action (`who`, `action`, `targetId`, `timestamp`, `ipAddress`) into an append-only `AuditLog` collection.
+
+### 3. Idempotent Webhooks & Third-Party Integrations (GitHub & Slack)
+- **Status:** ⬜ Planned
+- **Goal:** Automate deliverable lifecycle through external developer toolchains.
+- **Tech Stack:** Webhook Signature Verification (`crypto.timingSafeEqual`), HMAC SHA-256.
+- **Architectural Scope:**
+  - **Inbound GitHub Webhook:** Listen to `pull_request.closed` events; if merged and branch/PR mentions task title/ID, automatically transition task status to `Done`.
+  - **Idempotency Guarantee:** Cache event IDs in Redis to drop duplicate incoming webhook payloads.
+  - **Outbound Webhook Dispatcher:** Allow teams to register Slack/Discord webhook URLs for sprint milestone alerts.
+
+### 4. Redis Caching & Sliding-Window Rate Limiting
+- **Status:** ⬜ Planned
+- **Goal:** Maximize API throughput, protect backend endpoints from abuse, and cut query latency.
+- **Tech Stack:** Redis (`ioredis`), Sliding-Window Counter Algorithm.
+- **Architectural Scope:**
+  - **Cache-Aside Caching:** Cache high-frequency dashboard KPI aggregates and workspace member directories with TTL and key invalidation on mutation.
+  - **Sliding-Window Rate Limiting:** Implement token bucket or sliding-window log limiting sensitive endpoints (e.g. max 10 auth requests/min; max 120 task mutations/min per IP).
+
+### 5. Automated Deadline Engine (BullMQ + Redis Job Queue)
+- **Status:** ⬜ Planned
+- **Goal:** Reliable, distributed background job processing for deliverable reminders and digests.
+- **Tech Stack:** `BullMQ`, Redis, Cron Expressions.
+- **Architectural Scope:**
+  - Replace naive setInterval polling with a resilient background worker queue.
+  - Schedule repeatable jobs that evaluate upcoming milestones 24 hours and 1 hour before deadlines.
+  - Automatic retry with exponential backoff on worker failure.
+
+### 6. AI Sprint & Task Summarizer (LLM Standup Generator)
+- **Status:** ⬜ Planned
+- **Goal:** One-click sprint retrospectives, blocker analysis, and daily standup generation.
+- **Tech Stack:** Google Gemini API (`@google/genai`), Prompt Engineering.
+- **Architectural Scope:**
+  - Endpoint `POST /api/ai/sprint-summary` aggregating overdue tasks, completed deliverables, and team workload distribution.
+  - Generate executive summaries: "What was delivered this week", "Current blockers", and "High-risk upcoming deadlines".
+  - One-click copy for Slack/Teams standup updates.
+
+### 7. Production DevOps Pipeline & OpenAPI Documentation
+- **Status:** ⬜ Planned
+- **Goal:** Enterprise delivery standards with automated testing and self-documenting APIs.
+- **Tech Stack:** Docker, GitHub Actions, Jest, Supertest, Swagger/OpenAPI.
+- **Architectural Scope:**
+  - Multi-stage containerization with Alpine-based distroless production images for frontend and backend.
+  - GitHub Actions CI workflow running lint checks, unit tests, and integration tests on Pull Requests.
+  - Interactive Swagger UI documentation at `/api/docs`.
+
+---
+
+### 💼 Senior Engineer CV Bullet Template
+> **Engineered a real-time team collaboration platform using React, Node.js, Express, and MongoDB, implementing WebSockets for live task synchronization, RBAC middleware for workspace security, and Redis caching to cut dashboard query latency.**
+
+---
+
 ## 🔍 System Audit: Live vs. Hardcoded Features
 
 ### 🟢 100% Live & Cloud-Connected Capabilities
@@ -113,10 +201,11 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 - **Goal:** Instant multi-user live updates without page refreshing or background polling.
 - **Backend Tasks:**
   - [ ] Integrate `socket.io` in Express server.
-  - [ ] Emit events on `task:created`, `task:updated`, `task:deleted`, `notification:new`.
+  - [ ] Emit events on `task:created`, `task:updated`, `task:deleted`, `task:moved`, `member:presence`.
 - **Frontend Tasks:**
   - [ ] Setup `socket.io-client` connection.
   - [ ] Listen to events and update state automatically when teammates make changes.
+  - [ ] Display real-time active collaborator presence pills.
 
 ---
 
@@ -186,6 +275,16 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 
 ---
 
+### Feature 3.3: Automated Deadline Engine (BullMQ + Redis)
+- **Status:** ⬜ Planned
+- **Goal:** Distributed background worker queue dispatching automated digest and warning reminders.
+- **Backend Tasks:**
+  - [ ] Configure `BullMQ` with Redis connection.
+  - [ ] Define queue workers processing scheduled reminder jobs.
+  - [ ] Retry with exponential backoff on notification service failure.
+
+---
+
 ## 🔐 Phase 4: Authentication, Profiles & Workspaces
 
 ### Feature 4.1: User Authentication, Google OAuth & Account Linking
@@ -222,6 +321,18 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 
 ---
 
+### Feature 4.3: Granular Role-Based Access Control (RBAC) & Audit Logs
+- **Status:** ⬜ Planned
+- **Goal:** Fine-grained authorization tiers (`Owner`, `Admin`, `Member`, `Guest`) and immutable audit trails.
+- **Backend Tasks:**
+  - [ ] Implement `requireRole(['Owner', 'Admin'])` Express middleware.
+  - [ ] Create `AuditLog` schema tracking destructive and administrative mutations.
+- **Frontend Tasks:**
+  - [ ] Conditionally render administrative controls based on the current user's workspace role.
+  - [ ] Workspace settings view displaying audit trail logs.
+
+---
+
 ## 📊 Phase 5: Dashboard Analytics & Insights
 
 ### Feature 5.1: Productivity Metrics & Charts
@@ -236,18 +347,18 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
 
 ## 🤖 Phase 6: AI-Powered Productivity (Smart Tools)
 
-### Feature 6.1: AI Task & Sprint Generator
+### Feature 6.1: AI Sprint & Task Standup Summarizer
 - **Status:** ⬜ Planned
-- **Goal:** Generate breakdown of tasks and subtasks from natural language prompts.
+- **Goal:** Analyze overdue deliverables, workload distribution, and milestones to generate standup digests.
 - **Backend Tasks:**
-  - [ ] Add endpoint `POST /api/ai/generate-tasks` using Gemini API.
+  - [ ] Add endpoint `POST /api/ai/sprint-summary` leveraging Google Gemini API.
 - **Frontend Tasks:**
-  - [ ] "✨ Auto-Plan with AI" button on Tasks page.
-  - [ ] Preview generated tasks before confirming insertion.
+  - [ ] "✨ AI Standup Summary" modal on Dashboard.
+  - [ ] One-click copy format for Slack/Teams daily standups.
 
 ---
 
-## 🛠️ Phase 7: Infrastructure & Code Cleanliness
+## 🛠️ Phase 7: Infrastructure, Caching & DevOps
 
 ### Feature 7.1: Centralized API Client & Environment Config
 - **Status:** ✅ Completed
@@ -263,3 +374,32 @@ A comprehensive feature roadmap, architectural specifications, and implementatio
   - [x] Zero-dependency vector SVG icon system in [Icons.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/common/Icons.jsx).
   - [x] Reusable, responsive [Modal.jsx](file:///c:/Users/GividuE/Documents/GitHub/teamsync-collab-platform/frontend/src/components/common/Modal.jsx) with fixed header and scrollable body.
   - [x] Native Tailwind datetime picker with quick preset buttons (`Tomorrow 5 PM`, `In 3 Days`, `Next Week`, `End of Month`).
+
+### Feature 7.3: Redis Caching & Sliding-Window Rate Limiting
+- **Status:** ⬜ Planned
+- **Goal:** Sub-millisecond read latency on dashboard metrics and DDoS/abuse mitigation.
+- **Backend Tasks:**
+  - [ ] Connect `ioredis` client with graceful degradation if Redis is offline.
+  - [ ] Cache dashboard aggregation queries (`GET /api/dashboard/stats`).
+  - [ ] Implement sliding-window rate limiting middleware for public and protected routes.
+
+### Feature 7.4: Production DevOps Pipeline & OpenAPI Docs
+- **Status:** ⬜ Planned
+- **Goal:** Automated CI/CD verification and interactive API specifications.
+- **DevOps Tasks:**
+  - [ ] Multi-stage production `Dockerfile` (Node Alpine + Nginx).
+  - [ ] GitHub Actions workflow running Jest / Supertest API suites on commit.
+  - [ ] Swagger / OpenAPI specification UI at `/api/docs`.
+
+---
+
+## 🔗 Phase 8: Webhooks & External Tool Integrations
+
+### Feature 8.1: Idempotent Webhook Engine (GitHub & Slack)
+- **Status:** ⬜ Planned
+- **Goal:** Connect external developer activities to internal sprint deliverables.
+- **Backend Tasks:**
+  - [ ] Create endpoint `POST /api/webhooks/github` with HMAC-SHA256 signature verification.
+  - [ ] Transition task status to `Done` when associated PR is merged.
+  - [ ] Implement idempotent request deduplication via Redis.
+  - [ ] Outbound Slack webhook dispatcher for sprint milestone alerts.
