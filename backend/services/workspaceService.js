@@ -7,31 +7,15 @@ import { recordAuditLog } from './auditService.js';
 export const getAllWorkspaces = async () => {
   let workspaces = await Workspace.find().sort({ createdAt: 1 });
 
-  // Auto-seed standard workspaces if none exist yet
+  // Initialize a default workspace only if database has zero workspaces
   if (workspaces.length === 0) {
-    await Workspace.create([
-      {
-        name: 'Main Workspace',
-        currentSprint: 'Sprint 1',
-        sprints: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Backlog'],
-        description: 'Core product development & delivery pipeline',
-        isDefault: true,
-      },
-      {
-        name: 'Mobile App Launch',
-        currentSprint: 'Sprint 3',
-        sprints: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Beta Release'],
-        description: 'Cross-platform mobile application sprint track',
-        isDefault: false,
-      },
-      {
-        name: 'Core Platform API',
-        currentSprint: 'Sprint 2',
-        sprints: ['Sprint 1', 'Sprint 2', 'Security Audit'],
-        description: 'Backend microservices, authentication & infrastructure',
-        isDefault: false,
-      },
-    ]);
+    await Workspace.create({
+      name: 'Main Workspace',
+      currentSprint: 'Sprint 1',
+      sprints: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Backlog'],
+      description: 'Primary workspace for team collaboration and deliverables',
+      isDefault: true,
+    });
 
     workspaces = await Workspace.find().sort({ createdAt: 1 });
   }
