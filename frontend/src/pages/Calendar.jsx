@@ -17,7 +17,6 @@ import {
   AlertCircleIcon,
   KanbanIcon,
   ListIcon,
-  UserIcon,
   CheckIcon,
   XIcon
 } from '../components/common/Icons';
@@ -26,9 +25,7 @@ import {
   getTypeStyle, 
   getStatusStyle, 
   getPriorityStyle, 
-  TASK_TYPES, 
-  TASK_STATUSES, 
-  TASK_PRIORITIES 
+  TASK_TYPES 
 } from '../utils/taskHelpers';
 
 const Calendar = () => {
@@ -40,12 +37,12 @@ const Calendar = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Calendar View & Navigation state
+  // View state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('month'); // 'month' | 'week' | 'agenda'
+  const [viewMode, setViewMode] = useState('week'); // 'month' | 'week' | 'agenda'
 
-  // Filters & Search
+  // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All');
   const [selectedPriority, setSelectedPriority] = useState('All');
@@ -94,7 +91,7 @@ const Calendar = () => {
     fetchData();
   }, [fetchData]);
 
-  // Real-time WebSocket Listeners for instant multi-client sync
+  // Real-time WebSocket Listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -163,7 +160,6 @@ const Calendar = () => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const today = new Date();
-
   const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
   // Filter tasks based on search and filters
@@ -259,7 +255,7 @@ const Calendar = () => {
       });
     }
 
-    // Trailing days from next month to complete 35 or 42 grid cells
+    // Trailing days from next month
     const remainingCells = 42 - days.length;
     const padCount = remainingCells >= 7 ? remainingCells - 7 : remainingCells;
     for (let i = 1; i <= padCount; i++) {
@@ -336,11 +332,10 @@ const Calendar = () => {
 
   // Chronologically upcoming deliverables for workspace timeline
   const upcomingDeliverables = useMemo(() => {
-    const now = new Date();
     return [...tasks]
       .filter((t) => t.deadline)
       .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-      .slice(0, 6);
+      .slice(0, 5);
   }, [tasks]);
 
   // Modal open handlers
@@ -505,27 +500,58 @@ const Calendar = () => {
   };
 
   return (
-    <div className="flex flex-col space-y-4 max-w-7xl mx-auto w-full pb-10">
-      {/* Top Banner & Control Deck */}
-      <div className="bg-white px-5 py-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+    <div className="flex flex-col space-y-3 max-w-7xl mx-auto w-full pb-8">
+      {/* Sticky Compact Top Control Header */}
+      <div className="sticky top-0 z-20 bg-slate-50 pt-1 pb-2 space-y-2.5">
+        {/* Main Bar: Title, Period Nav, View Switcher & Actions */}
+        <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          {/* Left: Period Title & Quick Nav */}
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {viewMode === 'week' ? `Week of ${weekDays[0]?.fullDateStr} - ${weekDays[6]?.fullDateStr}` : monthName}
-            </h1>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {activeWorkspace?.currentSprint || 'Sprint 1'}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Track milestones, sync delivery schedules, and manage sprint deadlines in real time
-          </p>
-        </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                  {viewMode === 'week' 
+                    ? `Week of ${weekDays[0]?.fullDateStr} - ${weekDays[6]?.fullDateStr}` 
+                    : monthName}
+                </h1>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                  {activeWorkspace?.currentSprint || 'Sprint 1'}
+                </span>
+              </div>
+            </div>
 
-        {/* Action Controls & Navigation */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* View Mode Tabs */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold">
+            {/* Time Nav Buttons */}
+            <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200">
+              <button
+                type="button"
+                onClick={goToToday}
+                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-white rounded-lg transition cursor-pointer"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={prevPeriod}
+                className="p-1 hover:bg-white text-slate-600 rounded-lg transition cursor-pointer ml-0.5"
+                title="Previous"
+                aria-label="Previous period"
+              >
+                <ChevronLeftIcon className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={nextPeriod}
+                className="p-1 hover:bg-white text-slate-600 rounded-lg transition cursor-pointer"
+                title="Next"
+                aria-label="Next period"
+              >
+                <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Center: View Switcher */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setViewMode('month')}
@@ -564,178 +590,105 @@ const Calendar = () => {
             </button>
           </div>
 
-          {/* Time Navigation: Prev / Today / Next */}
-          <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80">
+          {/* Right: Quick Micro KPIs & Schedule Button */}
+          <div className="flex items-center gap-2">
+            <div className="hidden xl:flex items-center gap-2 text-xs font-medium text-slate-500 mr-1">
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700">
+                {filteredTasks.length} Milestones
+              </span>
+              {dueTodayCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 font-semibold">
+                  {dueTodayCount} Due Today
+                </span>
+              )}
+              <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold">
+                {donePercentage}% Done
+              </span>
+            </div>
+
             <button
               type="button"
-              onClick={goToToday}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-white rounded-lg transition cursor-pointer"
+              onClick={() => openCreateModal(selectedDate || new Date())}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={prevPeriod}
-              className="p-1.5 hover:bg-white text-slate-600 rounded-lg transition cursor-pointer ml-1"
-              title="Previous"
-              aria-label="Previous period"
-            >
-              <ChevronLeftIcon className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={nextPeriod}
-              className="p-1.5 hover:bg-white text-slate-600 rounded-lg transition cursor-pointer"
-              title="Next"
-              aria-label="Next period"
-            >
-              <ChevronRightIcon className="w-4 h-4" />
+              <PlusIcon className="w-4 h-4" />
+              <span>Schedule Deliverable</span>
             </button>
           </div>
-
-          {/* Schedule Deliverable Primary CTA */}
-          <button
-            type="button"
-            onClick={() => openCreateModal(selectedDate || new Date())}
-            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <PlusIcon className="w-4 h-4" />
-            <span>Schedule Deliverable</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Summary KPI Cards Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Deliverables
-            </span>
-            <span className="text-xl font-bold text-slate-900">{tasks.length}</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">workspace milestones</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-            <CalendarIcon className="w-5 h-5" />
-          </div>
         </div>
 
-        <div className={`bg-white p-3.5 rounded-xl border shadow-xs flex items-center justify-between ${dueTodayCount > 0 ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200/80'}`}>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Due Today
-            </span>
-            <span className={`text-xl font-bold ${dueTodayCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
-              {dueTodayCount}
-            </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">immediate priority</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-            <ClockIcon className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className={`bg-white p-3.5 rounded-xl border shadow-xs flex items-center justify-between ${urgentCount > 0 ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200/80'}`}>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              High / Urgent
-            </span>
-            <span className={`text-xl font-bold ${urgentCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-              {urgentCount}
-            </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">critical items</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-            <AlertCircleIcon className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Completed
-            </span>
-            <span className="text-xl font-bold text-emerald-600">
-              {donePercentage}%
-            </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">{doneCount} of {tasks.length} resolved</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-            <CheckCircleIcon className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Ribbon */}
-      <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-72">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search deliverables or assignees..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-            >
-              <XIcon className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-1 text-xs">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase mr-1">Type:</span>
-            {['All', 'Deadline', 'Meeting', 'Review'].map((type) => (
+        {/* Filter Ribbon: Search, Type Pills, Priority */}
+        <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-64">
+            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search deliverables or assignees..."
+              className="w-full pl-8 pr-3 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+            />
+            {searchQuery && (
               <button
-                key={type}
                 type="button"
-                onClick={() => setSelectedType(type)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  selectedType === type
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
               >
-                {type}
+                <XIcon className="w-3 h-3" />
               </button>
-            ))}
+            )}
           </div>
 
-          <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+          {/* Type and Priority Filters */}
+          <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Type:</span>
+              {['All', 'Deadline', 'Meeting', 'Review'].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSelectedType(type)}
+                  className={`px-2 py-0.5 rounded-md text-xs font-medium transition cursor-pointer ${
+                    selectedType === type
+                      ? 'bg-slate-900 text-white font-semibold'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
 
-          <div className="flex items-center gap-1 text-xs">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase mr-1">Priority:</span>
-            <select
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-              className="px-2 py-1 text-xs bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
-            >
-              <option value="All">All Priorities</option>
-              <option value="Urgent">Urgent</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
+            <div className="h-3.5 w-px bg-slate-200 mx-0.5 hidden sm:block"></div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Priority:</span>
+              <select
+                value={selectedPriority}
+                onChange={(e) => setSelectedPriority(e.target.value)}
+                className="px-2 py-0.5 text-xs bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="All">All Priorities</option>
+                <option value="Urgent">Urgent</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Workspace Area: Calendar Grid / Views + Upcoming Milestones Sidebar */}
+      {/* Main Calendar View Area + Side Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
         {/* Left Column (3 cols): Calendar Grid / Week View / Agenda View */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col min-h-[580px]">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col min-h-[560px]">
           {/* 1. MONTH VIEW */}
           {viewMode === 'month' && (
             <div className="flex-1 flex flex-col">
               {/* Day Headers (Sun-Sat) */}
-              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center py-2.5 select-none">
+              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center py-2 select-none">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
                   <div 
                     key={d} 
@@ -759,7 +712,7 @@ const Calendar = () => {
                     } ${cell.isToday ? 'bg-indigo-50/20' : ''} ${cell.isSelected ? 'ring-2 ring-indigo-500/80 ring-inset bg-indigo-50/30' : ''}`}
                   >
                     {/* Day Number and Quick Actions */}
-                    <div className="shrink-0 flex items-center justify-between mb-1.5">
+                    <div className="shrink-0 flex items-center justify-between mb-1">
                       <span
                         className={`text-xs font-bold inline-flex items-center justify-center w-6 h-6 rounded-full transition ${
                           cell.isToday
@@ -812,7 +765,7 @@ const Calendar = () => {
                               e.stopPropagation();
                               openEditModal(task);
                             }}
-                            className={`w-full text-left px-1.5 py-1 rounded-md text-[11px] font-medium border transition block shadow-2xs group/chip hover:brightness-95 cursor-pointer ${typeInfo.chip} ${
+                            className={`w-full text-left px-1.5 py-0.5 rounded text-[11px] font-medium border transition block shadow-2xs hover:brightness-95 cursor-pointer ${typeInfo.chip} ${
                               isDone ? 'opacity-70 line-through' : ''
                             }`}
                             title={`${task.title} • Assignee: ${task.assignee || 'Unassigned'} • Status: ${task.status}`}
@@ -831,7 +784,7 @@ const Calendar = () => {
                       })}
 
                       {cell.tasks && cell.tasks.length > 3 && (
-                        <span className="text-[10px] font-semibold text-indigo-600 hover:underline block text-center pt-0.5">
+                        <span className="text-[10px] font-semibold text-indigo-600 block text-center pt-0.5">
                           +{cell.tasks.length - 3} more
                         </span>
                       )}
@@ -842,72 +795,108 @@ const Calendar = () => {
             </div>
           )}
 
-          {/* 2. WEEK VIEW */}
+          {/* 2. WEEK VIEW (Clean, anti-overlap layout) */}
           {viewMode === 'week' && (
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            <div className="flex-1 grid grid-cols-7 divide-x divide-slate-100 overflow-x-hidden">
               {weekDays.map((col) => (
                 <div 
                   key={col.dayName} 
-                  className={`flex flex-col p-3 transition ${col.isToday ? 'bg-indigo-50/20' : 'bg-white'}`}
+                  onClick={() => setSelectedDate(col.date)}
+                  className={`flex flex-col p-2.5 transition min-w-0 cursor-pointer overflow-x-hidden ${
+                    col.isToday 
+                      ? 'bg-indigo-50/20' 
+                      : col.isSelected
+                      ? 'bg-slate-50/90'
+                      : 'bg-white hover:bg-slate-50/50'
+                  }`}
                 >
                   {/* Column Header */}
-                  <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+                  <div className="pb-2.5 mb-2 border-b border-slate-100 flex items-center justify-between min-w-0">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
                         {col.dayName}
                       </span>
-                      <span className={`text-base font-bold inline-flex items-center justify-center w-7 h-7 rounded-full mt-0.5 ${
+                      <span className={`text-sm font-bold inline-flex items-center justify-center w-6 h-6 rounded-full mt-0.5 ${
                         col.isToday ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-800'
                       }`}>
                         {col.dayNum}
                       </span>
                     </div>
+
                     <button
                       type="button"
-                      onClick={() => openCreateModal(col.date)}
-                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openCreateModal(col.date);
+                      }}
+                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition cursor-pointer shrink-0"
                       title={`Add deliverable on ${col.fullDateStr}`}
                     >
-                      <PlusIcon className="w-4 h-4" />
+                      <PlusIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   {/* Column Task Cards */}
-                  <div className="flex-1 py-2 space-y-2 overflow-y-auto">
+                  <div className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden">
                     {col.tasks.length === 0 ? (
-                      <div className="h-32 flex flex-col items-center justify-center text-center p-2 text-slate-300">
-                        <ClockIcon className="w-5 h-5 mb-1 stroke-1" />
-                        <span className="text-[11px]">Free day</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openCreateModal(col.date);
+                        }}
+                        className="w-full h-24 rounded-xl border border-dashed border-slate-200/90 hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-300 hover:text-indigo-500 transition flex flex-col items-center justify-center gap-1 text-[11px] font-medium cursor-pointer group"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500" />
+                        <span>Add</span>
+                      </button>
                     ) : (
                       col.tasks.map((task) => {
                         const typeInfo = getTypeStyle(task.type);
                         const isDone = task.status === 'Done';
+                        const initials = (task.assignee || 'U').slice(0, 2).toUpperCase();
+
                         return (
                           <div
                             key={task._id}
-                            onClick={() => openEditModal(task)}
-                            className={`p-2.5 rounded-xl border bg-white shadow-2xs hover:shadow-md transition cursor-pointer group border-slate-200/90 hover:border-indigo-400 ${
-                              isDone ? 'opacity-75' : ''
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(task);
+                            }}
+                            className={`p-2 rounded-xl border bg-white shadow-2xs hover:shadow-md transition cursor-pointer group border-slate-200 hover:border-indigo-400 flex flex-col gap-1 overflow-hidden ${
+                              isDone ? 'opacity-80' : ''
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeInfo.pill}`}>
+                            {/* Row 1: Type Badge & Due Time */}
+                            <div className="flex items-center justify-between gap-1 min-w-0">
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border truncate ${typeInfo.pill}`}>
                                 {task.type}
                               </span>
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getPriorityStyle(task.priority)}`}>
-                                {task.priority}
+                              <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap shrink-0">
+                                {dayjs(task.deadline).format('h:mm A')}
                               </span>
                             </div>
 
-                            <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition truncate">
+                            {/* Row 2: Title */}
+                            <h4 className={`text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition truncate leading-snug ${
+                              isDone ? 'line-through text-slate-400' : ''
+                            }`}>
                               {task.title}
                             </h4>
 
-                            <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 pt-1.5 border-t border-slate-100">
-                              <span className="truncate">{task.assignee || 'Unassigned'}</span>
-                              <span className="text-[10px] font-medium text-slate-400">
-                                {dayjs(task.deadline).format('h:mm A')}
+                            {/* Row 3: Assignee Initials Avatar & Priority */}
+                            <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100 min-w-0 mt-0.5">
+                              <div className="flex items-center gap-1 min-w-0" title={task.assignee || 'Unassigned'}>
+                                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-700 text-[9px] font-bold flex items-center justify-center shrink-0 border border-slate-200">
+                                  {initials}
+                                </span>
+                                <span className="text-[10px] text-slate-500 truncate">
+                                  {task.assignee || 'Unassigned'}
+                                </span>
+                              </div>
+
+                              <span className={`text-[9px] font-bold px-1 py-0.2 rounded border shrink-0 ${getPriorityStyle(task.priority)}`}>
+                                {task.priority}
                               </span>
                             </div>
                           </div>
@@ -922,7 +911,7 @@ const Calendar = () => {
 
           {/* 3. AGENDA / SCHEDULE VIEW */}
           {viewMode === 'agenda' && (
-            <div className="flex-1 p-5 divide-y divide-slate-100">
+            <div className="flex-1 p-4 divide-y divide-slate-100">
               {filteredTasks.length === 0 ? (
                 <div className="py-16 text-center text-slate-400">
                   <CalendarIcon className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -942,7 +931,7 @@ const Calendar = () => {
                       <div
                         key={task._id}
                         onClick={() => openEditModal(task)}
-                        className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 px-3 rounded-xl transition cursor-pointer group"
+                        className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 px-3 rounded-xl transition cursor-pointer group"
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center shrink-0">
@@ -969,7 +958,7 @@ const Calendar = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0 sm:self-center self-end">
+                        <div className="flex items-center gap-2 shrink-0 sm:self-center self-end">
                           <span className={`text-xs ${relative.color}`}>
                             {relative.text}
                           </span>
@@ -988,11 +977,11 @@ const Calendar = () => {
           )}
         </div>
 
-        {/* Right Column (1 col): Upcoming Milestones & Selected Date Drawer */}
-        <div className="space-y-4">
+        {/* Right Column (1 col): Selected Date Panel & Upcoming Milestones */}
+        <div className="space-y-3">
           {/* Selected Date Card */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Selected Date
@@ -1012,14 +1001,14 @@ const Calendar = () => {
             </div>
 
             {/* Deliverables on Selected Date */}
-            <div className="space-y-2">
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
               {selectedDateTasks.length === 0 ? (
-                <div className="text-center py-6 px-3 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                  <p className="text-xs text-slate-500 font-medium">No deliverables scheduled</p>
+                <div className="text-center py-5 px-3 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                  <p className="text-xs text-slate-400 font-medium">No deliverables scheduled</p>
                   <button
                     type="button"
                     onClick={() => openCreateModal(selectedDate)}
-                    className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
+                    className="mt-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
                   >
                     + Add milestone
                   </button>
@@ -1045,8 +1034,8 @@ const Calendar = () => {
                         {t.title}
                       </h5>
                       <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1.5">
-                        <span>{t.assignee || 'Unassigned'}</span>
-                        <span className="font-semibold text-indigo-600">{t.status}</span>
+                        <span className="truncate">{t.assignee || 'Unassigned'}</span>
+                        <span className="font-semibold text-indigo-600 shrink-0">{t.status}</span>
                       </div>
                     </div>
                   );
@@ -1056,18 +1045,18 @@ const Calendar = () => {
           </div>
 
           {/* Upcoming Milestones Overview */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                 <ClockIcon className="w-3.5 h-3.5 text-indigo-500" />
                 <span>Upcoming Milestones</span>
               </h3>
-              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded">
                 Next {upcomingDeliverables.length}
               </span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
               {upcomingDeliverables.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-4">All caught up!</p>
               ) : (
@@ -1077,17 +1066,17 @@ const Calendar = () => {
                     <div
                       key={item._id}
                       onClick={() => openEditModal(item)}
-                      className="p-2.5 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 transition cursor-pointer flex items-center justify-between gap-2"
+                      className="p-2 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 transition cursor-pointer flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0">
                         <h5 className="text-xs font-semibold text-slate-800 truncate">
                           {item.title}
                         </h5>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                        <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
                           {formatShortDate(item.deadline)} • {item.assignee || 'Unassigned'}
                         </span>
                       </div>
-                      <span className={`text-[10px] shrink-0 ${rel.color}`}>
+                      <span className={`text-[10px] shrink-0 font-medium ${rel.color}`}>
                         {rel.text}
                       </span>
                     </div>
@@ -1097,26 +1086,26 @@ const Calendar = () => {
             </div>
           </div>
 
-          {/* Quick Legend & Agile Guide */}
-          <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 shadow-sm space-y-2.5 text-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">
+          {/* Clean Agile Types Guide */}
+          <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Deliverable Types & Priority
             </span>
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                 <span>Meeting</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                 <span>Deadline</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span>Review</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 <span>High Priority</span>
               </div>
             </div>
@@ -1124,7 +1113,7 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Full Feature Rich Task Detail & Scheduling Modal */}
+      {/* Task Details and Scheduling Modal */}
       <TaskDetailModal
         isOpen={isModalOpen}
         onClose={() => {
